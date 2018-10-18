@@ -1,0 +1,32 @@
+{
+  "name": "@dlghq/dialog-bot-sdk",
+  "version": "0.0.0",
+  "description": "Dialog Bot SDK",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "exit 0",
+    "api": "pbts -o src/api/index.d.ts node_modules/@dlghq/dialog-api/js/api.js",
+    "build": "babel -d lib/ src/",
+    "start": "nodemon --exec babel-node -- example/index.js"
+  },
+  "author": "Nikita Gusakov <gusnkt@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@dlghq/dialog-api": "0.6.3",
+    "@grpc/proto-loader": "0.3.0",
+    "bluebird": "3.5.2",
+    "dataclass": "1.1.1",
+    "grpc": "1.15.1",
+    "lodash": "4.17.11",
+    "rxjs": "6.3.3",
+    "uuid": "3.3.2"
+  },
+  "devDependencies": {
+    "@types/bluebird": "3.5.24",
+    "@types/dotenv": "4.0.3",
+    "dotenv": "6.1.0",
+    "nodemon": "1.18.4",
+    "ts-node": "7.0.1",
+    "typescript": "3.1.3"
+  }
+}
