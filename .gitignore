@@ -1,3 +1,4 @@
 .env
 lib/
+docs/
 node_modules/

@@ -2,7 +2,6 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import { EventEmitter } from 'events';
 import { dialog } from '@dlghq/dialog-api';
 import Rpc from './Rpc';
 import { User, Group, Message } from './entities';
@@ -16,14 +15,12 @@ type Config = {
   endpoints: Array<string>
 };
 
-class Bot extends EventEmitter {
+class Bot {
   private readonly rpc: Rpc;
   private readonly ready: Promise<void>;
   public readonly updateSubject: Subject<dialog.UpdateSeqUpdate> = new Subject();
 
   constructor(config: Config) {
-    super();
-
     const endpoint = config.endpoints.map((url) => new URL(url)).find(() => true);
     if (!endpoint) {
       throw new Error('Endpoints misconfigured');
