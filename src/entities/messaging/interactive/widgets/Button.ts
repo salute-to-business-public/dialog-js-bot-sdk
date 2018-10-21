@@ -8,7 +8,7 @@ import { getOpt } from '../../../utils';
 
 type Props = {
   label: string,
-  value: string
+  value?: string
 };
 
 class Button {

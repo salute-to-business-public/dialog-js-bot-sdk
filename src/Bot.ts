@@ -11,6 +11,7 @@ import {
   UUID,
   Peer,
   User,
+  ActionEvent,
   FileLocation,
   Message,
   ActionGroup,
@@ -70,6 +71,20 @@ class Bot {
       .pipe(flatMap((update) => {
         if (update.updateMessage) {
           return callback(Message.from(update.updateMessage));
+        }
+
+        return EMPTY;
+      }));
+  }
+
+  /**
+   * Subscribes to messages stream.
+   */
+  public onAction(callback: (message: ActionEvent) => Promise<void>): Observable<void> {
+    return this.updateSubject
+      .pipe(flatMap((update) => {
+        if (update.updateInteractiveMediaEvent) {
+          return callback(ActionEvent.from(update.updateInteractiveMediaEvent));
         }
 
         return EMPTY;

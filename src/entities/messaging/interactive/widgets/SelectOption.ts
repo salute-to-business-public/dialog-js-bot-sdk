@@ -7,7 +7,7 @@ import { dialog, google } from '@dlghq/dialog-api';
 
 type Props = {
   label: string,
-  value: string
+  value?: string
 };
 
 class SelectOption {
@@ -21,7 +21,7 @@ class SelectOption {
 
   private constructor(
     public readonly label: string,
-    public readonly value: string = uuid()
+    public readonly value: string
   ) {
   }
 

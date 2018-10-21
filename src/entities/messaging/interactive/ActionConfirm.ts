@@ -7,9 +7,9 @@ import { getOpt } from '../../utils';
 
 type Props = {
   text: null | string,
-  title: null | string,
-  ok: null | string,
-  dismiss: null | string
+  title?: null | string,
+  ok?: null | string,
+  dismiss?: null | string
 };
 
 class ActionConfirm {

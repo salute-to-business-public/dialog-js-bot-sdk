@@ -9,7 +9,14 @@ class TextContent {
   public readonly type = 'text';
 
   public static from(api: dialog.TextMessage) {
-    return new TextContent(api.text, []);
+    const actions: Array<ActionGroup> = [];
+    api.media.forEach((media) => {
+      media.actions.forEach((action) => {
+        actions.push(ActionGroup.from(action));
+      })
+    });
+
+    return new TextContent(api.text, actions);
   }
 
   public static create(text: string, actions: Array<ActionGroup>) {
@@ -20,8 +27,6 @@ class TextContent {
     public readonly text: string,
     public readonly actions: Array<ActionGroup>
   ) {
-    this.text = text;
-    this.actions = actions;
   }
 
   public toApi() {

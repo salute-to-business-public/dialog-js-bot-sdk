@@ -5,7 +5,7 @@
 
 import path from 'path';
 import dotenv from 'dotenv';
-import Bot, { MessageAttachment } from '../src';
+import Bot, { MessageAttachment, ActionGroup, Action, Button } from '../src';
 
 dotenv.config();
 
@@ -32,7 +32,15 @@ bot
       const mid = await bot.sendText(
         message.peer,
         message.content.text,
-        MessageAttachment.reply(message.id)
+        MessageAttachment.reply(message.id),
+        ActionGroup.create({
+          actions: [
+            Action.create({
+              id: 'test',
+              widget: Button.create({ label: 'Test' })
+            })
+          ]
+        })
       );
 
       if (message.content.text === 'octocat') {
@@ -42,6 +50,16 @@ bot
         await bot.sendDocument(message.peer, __filename, MessageAttachment.reply(mid));
       }
     }
+  })
+  .toPromise()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+
+bot
+  .onAction(async (event) => {
+    console.log(event);
   })
   .toPromise()
   .catch((error) => {

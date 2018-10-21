@@ -9,7 +9,7 @@ import SelectOption from './SelectOption';
 type Props = {
   label: string,
   options: Array<SelectOption>,
-  defaultValue: null | string
+  defaultValue?: null | string
 };
 
 class Select {
@@ -28,7 +28,7 @@ class Select {
   private constructor(
     public readonly label: string,
     public readonly options: Array<SelectOption>,
-    public readonly defaultValue: null | string = null
+    public readonly defaultValue: null | string
   ) {
   }
 

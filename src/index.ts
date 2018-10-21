@@ -3,11 +3,7 @@
  */
 
 import Bot from './Bot';
-import { MessageAttachment } from './entities';
 
-export {
-  Bot,
-  MessageAttachment
-};
+export * from './entities';
 
 export default Bot;
