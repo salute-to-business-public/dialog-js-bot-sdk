@@ -3,7 +3,6 @@
  */
 
 
-import _ from 'lodash';
 import { Observable, Subject, EMPTY } from 'rxjs';
 import { flatMap, retry } from 'rxjs/operators';
 import { dialog } from '@dlghq/dialog-api';
@@ -12,9 +11,9 @@ import {
   UUID,
   Peer,
   User,
-  Group,
   FileLocation,
   Message,
+  ActionGroup,
   TextContent,
   DocumentContent,
   MessageAttachment
@@ -80,11 +79,18 @@ class Bot {
   /**
    * Sends text message.
    */
-  public async sendText(peer: Peer, text: string, attachment?: MessageAttachment): Promise<UUID> {
+  public async sendText(
+    peer: Peer,
+    text: string,
+    attachment?: null | MessageAttachment,
+    actionOrActions?: ActionGroup | ActionGroup[]
+  ): Promise<UUID> {
     const state = await this.ready;
     const outPeer = state.createOutPeer(peer);
 
-    const content = TextContent.create(text, []);
+    const actions = actionOrActions ? Array.isArray(actionOrActions) ? actionOrActions : [actionOrActions] : [];
+
+    const content = TextContent.create(text, actions);
 
     return this.rpc.sendMessage(outPeer, content, attachment);
   }
