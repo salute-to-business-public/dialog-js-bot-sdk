@@ -23,6 +23,8 @@ import State from './State';
 import { ResponseEntities } from './internal/types';
 import getFileInfo from './utils/getFileInfo';
 import createImagePreview from './utils/createImagePreview';
+import normalizeArray from './utils/normalizeArray';
+import DeletedContent from './entities/messaging/content/DeletedContent';
 
 type Config = {
   token: string,
@@ -102,12 +104,29 @@ class Bot {
   ): Promise<UUID> {
     const state = await this.ready;
     const outPeer = state.createOutPeer(peer);
-
-    const actions = actionOrActions ? Array.isArray(actionOrActions) ? actionOrActions : [actionOrActions] : [];
-
-    const content = TextContent.create(text, actions);
+    const content = TextContent.create(text, normalizeArray(actionOrActions));
 
     return this.rpc.sendMessage(outPeer, content, attachment);
+  }
+
+  /**
+   * Edits text message.
+   */
+  public async editText(
+    mid: UUID,
+    text: string,
+    actionOrActions?: ActionGroup | ActionGroup[]
+  ): Promise<void> {
+    const content = TextContent.create(text, normalizeArray(actionOrActions));
+
+    return this.rpc.editMessage(mid, content);
+  }
+
+  /**
+   * Edits text message.
+   */
+  public async deleteMessage(mid: UUID): Promise<void> {
+    return this.rpc.editMessage(mid, DeletedContent.create());
   }
 
   /**

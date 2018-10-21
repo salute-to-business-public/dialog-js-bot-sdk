@@ -202,6 +202,16 @@ class Rpc extends Services {
     return UUID.from(res.mid);
   }
 
+  async editMessage(mid: UUID, content: Content) {
+    await this.messaging.updateMessage(
+      dialog.RequestUpdateMessage.create({
+        mid: mid.toApi(),
+        updatedMessage: contentToApi(content)
+      }),
+      await this.getMetadata()
+    );
+  }
+
   async uploadFile(fileName: string, fileInfo: FileInfo, maxChunkSize: number = 1024 * 1024) {
     const metadata = await this.getMetadata();
     const { uploadKey } = await this.mediaAndFiles.getFileUploadUrl(

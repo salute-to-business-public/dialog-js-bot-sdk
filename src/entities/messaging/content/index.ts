@@ -6,14 +6,21 @@ import { dialog } from '@dlghq/dialog-api';
 import TextContent from './TextContent';
 import ServiceContent from './ServiceContent';
 import DocumentContent from './DocumentContent';
+import DeletedContent from './DeletedContent';
 import UnknownContent from './UnknownContent';
 
-export type Content = TextContent | ServiceContent | DocumentContent | UnknownContent;
+export type Content =
+  | TextContent
+  | ServiceContent
+  | DocumentContent
+  | DeletedContent
+  | UnknownContent;
 
 export {
   TextContent,
   ServiceContent,
   DocumentContent,
+  DeletedContent,
   UnknownContent
 }
 
@@ -35,6 +42,11 @@ export function apiToContent(api: dialog.MessageContent): Content {
     return DocumentContent.from(api.documentMessage);
   }
 
+  if (api.deletedMessage) {
+    return DeletedContent.from(api.deletedMessage);
+  }
+
+
   return UnknownContent.create();
 }
 
@@ -45,6 +57,7 @@ export function contentToApi(content: Content): dialog.MessageContent {
   switch (content.type) {
     case 'text':
     case 'document':
+    case 'deleted':
       return content.toApi();
 
     default:

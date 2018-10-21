@@ -34,6 +34,13 @@ class Messaging {
   ): Promise<dialog.ResponseSeqDate> {
     return this.service.sendMessageAsync(request, metadata);
   }
+
+  updateMessage(
+    request: dialog.RequestUpdateMessage,
+    metadata: Metadata
+  ): Promise<dialog.ResponseSeqDate> {
+    return this.service.updateMessageAsync(request, metadata);
+  }
 }
 
 export default Messaging;

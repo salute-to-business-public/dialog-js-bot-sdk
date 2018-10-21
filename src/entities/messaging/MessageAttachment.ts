@@ -5,6 +5,7 @@
 import { dialog } from '@dlghq/dialog-api';
 import UUID from '../UUID';
 import Message from './Message';
+import normalizeArray from '../../utils/normalizeArray';
 
 enum MessageAttachmentType {
   REPLY = 'reply',
@@ -38,15 +39,11 @@ class MessageAttachment {
   }
 
   public static reply(mids: UUID | Array<UUID>) {
-    if (mids instanceof UUID) {
-      return new MessageAttachment(MessageAttachmentType.REPLY, [mids]);
-    }
-
-    return new MessageAttachment(MessageAttachmentType.REPLY, mids);
+    return new MessageAttachment(MessageAttachmentType.REPLY, normalizeArray(mids));
   }
 
-  public static forward(mids: Array<UUID>) {
-    return new MessageAttachment(MessageAttachmentType.FORWARD, mids);
+  public static forward(mids: UUID | Array<UUID>) {
+    return new MessageAttachment(MessageAttachmentType.FORWARD, normalizeArray(mids));
   }
 
   private constructor(type: MessageAttachmentType, mids: Array<UUID>) {
