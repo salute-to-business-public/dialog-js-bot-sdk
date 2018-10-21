@@ -18,7 +18,7 @@ Usage
 
 ```typescript
 import dotenv from 'dotenv';
-import Bot from '@dlghq/dialog-bot-sdk';
+import Bot, { MessageAttachment } from '@dlghq/dialog-bot-sdk';
 
 dotenv.config();
 
@@ -32,17 +32,32 @@ const bot = new Bot({
   endpoints: ['https://grpc-test.transmit.im:9443']
 });
 
-// subscribe for messages
-bot.onMessage((message) => {
-  console.log(JSON.stringify(message));
-});
-
-// raw updates
 bot.updateSubject.subscribe({
   next(update) {
     console.log('update', update);
   }
 });
+
+bot
+  .onMessage(async (message) => {
+    if (message.content.type === 'text') {
+      // echo message with reply
+      const mid = await bot.sendText(
+        message.peer,
+        message.content.text,
+        MessageAttachment.reply(message.id)
+      );
+
+      // reply to self sent message with document
+      await bot.sendDocument(message.peer, __filename, MessageAttachment.reply(mid));
+    }
+  })
+  .toPromise()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+
 ```
 
 License

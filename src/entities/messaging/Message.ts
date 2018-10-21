@@ -3,9 +3,9 @@
  */
 
 import { dialog } from '@dlghq/dialog-api';
-import Peer from './Peer';
-import UUID from './UUID';
-import MessageContent from './MessageContent';
+import Peer from '../Peer';
+import UUID from '../UUID';
+import { Content, apiToContent } from './content';
 import MessageAttachment from './MessageAttachment';
 
 class Message {
@@ -27,7 +27,7 @@ class Message {
   /**
    * Message content.
    */
-  public readonly content: MessageContent;
+  public readonly content: Content;
 
   /**
    * Message attachment.
@@ -51,7 +51,7 @@ class Message {
       UUID.from(api.mid),
       Peer.from(api.peer),
       new Date(api.date.toInt()),
-      MessageContent.from(api.message),
+      apiToContent(api.message),
       MessageAttachment.from(api.reply, api.forward)
     );
   }
@@ -60,7 +60,7 @@ class Message {
     id: UUID,
     peer: Peer,
     date: Date,
-    content: MessageContent,
+    content: Content,
     attachment: null | MessageAttachment
   ) {
     this.id = id;

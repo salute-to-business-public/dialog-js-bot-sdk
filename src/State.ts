@@ -2,10 +2,12 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
+import Long from 'long';
 import { dialog } from '@dlghq/dialog-api';
-import { Peer, User, Group } from './entities';
+import { Peer, User, Group, OutPeer } from './entities';
 import { Entities, PeerEntities, ResponseEntities } from './internal/types';
 import mapNotNull from './utils/mapNotNull';
+import PeerType from './entities/PeerType';
 
 class State {
   public readonly self: User;
@@ -15,6 +17,29 @@ class State {
 
   constructor(self: User) {
     this.self = self;
+  }
+
+  createOutPeer(peer: Peer): OutPeer {
+    switch (peer.type) {
+      case PeerType.PRIVATE:
+        const user = this.users.get(peer.id);
+        if (user) {
+          return OutPeer.create(peer, user.accessHash);
+        }
+
+        throw new Error(`User #${peer.id} unexpectedly not found`);
+
+      case PeerType.GROUP:
+        const group = this.groups.get(peer.id);
+        if (group) {
+          return OutPeer.create(peer, group.accessHash);
+        }
+
+        throw new Error(`Group #${peer.id} unexpectedly not found`);
+
+      default:
+        return OutPeer.create(peer, Long.ZERO);
+    }
   }
 
   applyDialogs(dialogs: dialog.Dialog[]) {

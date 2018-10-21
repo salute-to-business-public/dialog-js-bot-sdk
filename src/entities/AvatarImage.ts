@@ -3,7 +3,7 @@
  */
 
 import { dialog } from '@dlghq/dialog-api';
-import FileLocation from './FileLocation';
+import FileLocation from './files/FileLocation';
 
 class AvatarImage {
   public readonly width: number;
@@ -15,7 +15,7 @@ class AvatarImage {
     this.width = api.width;
     this.height = api.height;
     this.size = api.fileSize;
-    this.location = api.fileLocation ? new FileLocation(api.fileLocation) : null;
+    this.location = api.fileLocation ? FileLocation.from(api.fileLocation) : null;
   }
 
   public toApi() {

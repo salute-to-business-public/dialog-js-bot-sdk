@@ -4,7 +4,7 @@
 
 
 import dotenv from 'dotenv';
-import Bot from '../src';
+import Bot, { MessageAttachment } from '../src';
 
 dotenv.config();
 
@@ -24,7 +24,22 @@ bot.updateSubject.subscribe({
   }
 });
 
+bot
+  .onMessage(async (message) => {
+    if (message.content.type === 'text') {
+      // echo message with reply
+      const mid = await bot.sendText(
+        message.peer,
+        message.content.text,
+        MessageAttachment.reply(message.id)
+      );
 
-bot.onMessage((message) => {
-  console.log(JSON.stringify(message));
-});
+      // reply to self sent message with document
+      await bot.sendDocument(message.peer, __filename, MessageAttachment.reply(mid));
+    }
+  })
+  .toPromise()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

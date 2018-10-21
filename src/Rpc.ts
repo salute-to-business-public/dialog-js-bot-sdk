@@ -2,6 +2,7 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
+import fs from 'fs';
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import { Metadata } from 'grpc';
@@ -11,13 +12,20 @@ import Services from './services';
 import mapNotNull from './utils/mapNotNull';
 import reduce from './utils/reduce';
 import { Entities, PeerEntities, ResponseEntities } from './internal/types';
-import { Observable, Subscriber, from } from 'rxjs';
-import { filter, flatMap, map } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { flatMap, last, map } from 'rxjs/operators';
+import { Content, OutPeer, FileLocation } from './entities';
+import MessageAttachment from './entities/messaging/MessageAttachment';
+import { contentToApi, DocumentContent } from './entities/messaging/content';
+import { FileInfo } from './utils/getFileInfo';
+import randomLong from './utils/randomLong';
+import fromReadStream from './utils/fromReadStream';
+import UUID from './entities/UUID';
 
 const pkg = require('../package.json');
 
 class Rpc extends Services {
-  metadata: null | Promise<Metadata> = null;
+  private metadata: null | Promise<Metadata> = null;
 
   constructor(endpoint: URL) {
     super(endpoint, createCredentials(endpoint));
@@ -165,6 +173,74 @@ class Rpc extends Services {
 
         throw new Error('Unexpected behaviour');
       }));
+  }
+
+  async sendMessage(
+    peer: OutPeer,
+    content: Content,
+    attachment?: null | MessageAttachment,
+    isOnlyForUser?: null | number
+  ) {
+    const rid = await randomLong();
+
+    const res = await this.messaging.sendMessage(
+      dialog.RequestSendMessage.create({
+        rid,
+        isOnlyForUser,
+        peer: peer.toApi(),
+        message: contentToApi(content),
+        reply: attachment ? attachment.toReplyApi() : null,
+        forward: attachment ? attachment.toForwardApi() : null
+      }),
+      await this.getMetadata()
+    );
+
+    if (!res.mid) {
+      throw new Error('Unexpected behaviour');
+    }
+
+    return UUID.from(res.mid);
+  }
+
+  async uploadFile(fileName: string, fileInfo: FileInfo, maxChunkSize: number = 1024 * 1024) {
+    const metadata = await this.getMetadata();
+    const { uploadKey } = await this.mediaAndFiles.getFileUploadUrl(
+      dialog.RequestGetFileUploadUrl.create({ expectedSize: fileInfo.size }),
+      metadata
+    );
+
+    let partNumber = 0;
+    const location = await fromReadStream(
+      fs.createReadStream(fileName, { highWaterMark: maxChunkSize })
+    )
+      .pipe(flatMap(async (chunk) => {
+        const { url } = await this.mediaAndFiles.getFileUploadPartUrl(
+          dialog.RequestGetFileUploadPartUrl.create({
+            uploadKey,
+            partSize: chunk.length,
+            partNumber: partNumber++
+          }),
+          metadata
+        );
+
+        await this.mediaAndFiles.uploadChunk(url, chunk);
+      }))
+      .pipe(last())
+      .pipe(flatMap(async () => {
+        const { uploadedFileLocation } = await this.mediaAndFiles.commitFileUpload(
+          dialog.RequestCommitFileUpload.create({ uploadKey, fileName: fileInfo.name }),
+          metadata
+        );
+
+        if (!uploadedFileLocation) {
+          throw new Error('File unexpectedly failed');
+        }
+
+        return uploadedFileLocation;
+      }))
+      .toPromise();
+
+    return location;
   }
 }
 
