@@ -22,6 +22,7 @@ import {
 import State from './State';
 import { ResponseEntities } from './internal/types';
 import getFileInfo from './utils/getFileInfo';
+import createImagePreview from './utils/createImagePreview';
 
 type Config = {
   token: string,
@@ -108,6 +109,32 @@ class Bot {
       null,
       FileLocation.from(fileLocation),
       null
+    );
+
+    return this.rpc.sendMessage(outPeer, content, attachment);
+  }
+
+  /**
+   * Sends image message.
+   */
+  public async sendImage(
+    peer: Peer,
+    fileName: string,
+    attachment?: MessageAttachment
+  ): Promise<UUID> {
+    const state = await this.ready;
+    const outPeer = state.createOutPeer(peer);
+    const fileInfo = await getFileInfo(fileName);
+    const { preview, extension } = await createImagePreview(fileName);
+    const fileLocation = await this.rpc.uploadFile(fileName, fileInfo);
+
+    const content = DocumentContent.create(
+      fileInfo.name,
+      fileInfo.size,
+      fileInfo.mime,
+      preview,
+      FileLocation.from(fileLocation),
+      extension
     );
 
     return this.rpc.sendMessage(outPeer, content, attachment);

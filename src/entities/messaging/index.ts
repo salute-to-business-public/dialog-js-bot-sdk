@@ -4,14 +4,10 @@
 
 import Message from './Message';
 import MessageAttachment from './MessageAttachment';
-import { Content, TextContent, ServiceContent, DocumentContent, UnknownContent } from './content';
 
 export {
   Message,
-  Content,
-  TextContent,
-  ServiceContent,
-  DocumentContent,
-  UnknownContent,
   MessageAttachment
 };
+
+export * from './content';

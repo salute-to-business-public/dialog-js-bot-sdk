@@ -19,6 +19,16 @@ class DocumentVideoExtension {
     this.height = height;
     this.duration = duration;
   }
+
+  public toApi() {
+    return dialog.DocumentEx.create({
+      video: dialog.DocumentExVideo.create({
+        w: this.width,
+        h: this.height,
+        duration: this.duration
+      })
+    });
+  }
 }
 
 export default DocumentVideoExtension;

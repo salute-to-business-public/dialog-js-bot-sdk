@@ -24,7 +24,11 @@ class FilePreview {
     return new FilePreview(api.w, api.h, api.thumb);
   }
 
-  constructor(width: number, height: number, content: Uint8Array) {
+  public static create(width: number, height: number, content: Uint8Array) {
+    return new FilePreview(width, height, content);
+  }
+
+  private constructor(width: number, height: number, content: Uint8Array) {
     this.width = width;
     this.height = height;
     this.content = content;

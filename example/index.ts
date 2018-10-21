@@ -3,6 +3,7 @@
  */
 
 
+import path from 'path';
 import dotenv from 'dotenv';
 import Bot, { MessageAttachment } from '../src';
 
@@ -34,8 +35,12 @@ bot
         MessageAttachment.reply(message.id)
       );
 
-      // reply to self sent message with document
-      await bot.sendDocument(message.peer, __filename, MessageAttachment.reply(mid));
+      if (message.content.text === 'octocat') {
+        await bot.sendImage(message.peer, path.join(__dirname, 'Sentrytocat.jpg'));
+      } else {
+        // reply to self sent message with document
+        await bot.sendDocument(message.peer, __filename, MessageAttachment.reply(mid));
+      }
     }
   })
   .toPromise()

@@ -17,6 +17,8 @@ export {
   UnknownContent
 }
 
+export * from './document';
+
 /**
  * @private
  */

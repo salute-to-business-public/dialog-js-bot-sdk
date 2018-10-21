@@ -36,3 +36,4 @@ export function apiToDocumentExtension(api: dialog.DocumentEx): null | DocumentE
 
   return null;
 }
+

@@ -6,8 +6,6 @@
   "scripts": {
     "test": "exit 0",
     "api": "pbts -o src/api/index.d.ts node_modules/@dlghq/dialog-api/js/api.js",
-    "build": "babel -d lib/ src/",
-    "start": "nodemon --exec babel-node -- example/index.js",
     "predocs": "rm -rf docs/",
     "docs": "typedoc --excludePrivate --theme minimal --mode file --out docs src/index.ts",
     "postdocs": "buildbranch gh-pages docs"
@@ -20,6 +18,7 @@
     "bluebird": "3.5.2",
     "dataclass": "1.1.1",
     "grpc": "1.15.1",
+    "jimp": "^0.5.4",
     "lodash": "4.17.11",
     "mime": "2.3.1",
     "node-fetch": "2.2.0",

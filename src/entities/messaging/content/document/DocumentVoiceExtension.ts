@@ -15,6 +15,14 @@ class DocumentVoiceExtension {
   private constructor(duration: number) {
     this.duration = duration;
   }
+
+  public toApi() {
+    return dialog.DocumentEx.create({
+      voice: dialog.DocumentExVoice.create({
+        duration: this.duration
+      })
+    });
+  }
 }
 
 export default DocumentVoiceExtension;

@@ -62,8 +62,8 @@ class DocumentContent {
         fileId: this.location.id,
         fileSize: this.size,
         mimeType: this.mime,
-        accessHash: this.location.accessHash
-        // public ext?: (dialog.DocumentEx|null);
+        accessHash: this.location.accessHash,
+        ext: this.extension ? this.extension.toApi() : null
       })
     });
   }
