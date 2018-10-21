@@ -1,6 +1,6 @@
 {
   "name": "@dlghq/dialog-bot-sdk",
-  "version": "0.0.0",
+  "version": "3.0.0",
   "description": "Dialog Bot SDK",
   "main": "lib/index.js",
   "scripts": {
