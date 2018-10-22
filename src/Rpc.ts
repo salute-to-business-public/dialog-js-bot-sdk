@@ -21,6 +21,7 @@ import { FileInfo } from './utils/getFileInfo';
 import randomLong from './utils/randomLong';
 import fromReadStream from './utils/fromReadStream';
 import UUID from './entities/UUID';
+import Message from './entities/messaging/Message';
 
 const pkg = require('../package.json');
 
@@ -274,6 +275,21 @@ class Rpc extends Services {
     }
 
     throw new Error(`Unexpectedly failed to resolve file url for ${fileLocation.id}`);
+  }
+
+  async fetchMessages(mids: Array<UUID>): Promise<ResponseEntities<dialog.HistoryMessage[]>> {
+    const entities = await this.sequenceAndUpdates.getReferencedEntities(
+      dialog.RequestGetReferencedEntitites.create({ mids: mids.map((mid) => mid.toApi()) }),
+      await this.getMetadata()
+    );
+
+    return {
+      payload: entities.messages,
+      users: entities.users,
+      groups: entities.groups,
+      userPeers: [],
+      groupPeers: []
+    };
   }
 }
 

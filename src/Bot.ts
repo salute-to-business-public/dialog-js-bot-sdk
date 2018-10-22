@@ -15,6 +15,7 @@ import {
   ActionEvent,
   FileLocation,
   Message,
+  HistoryMessage,
   ActionGroup,
   TextContent,
   DocumentContent,
@@ -228,6 +229,18 @@ class Bot {
    */
   public fetchFileUrl(fileLocation: FileLocation): Promise<string> {
     return this.rpc.fetchFileUrl(fileLocation);
+  }
+
+  /**
+   * Retrieves messages by message ids.
+   */
+  public async fetchMessages(mids: Array<UUID>): Promise<Array<HistoryMessage>> {
+    const messages = await this.applyEntities(
+      await this.ready,
+      await this.rpc.fetchMessages(mids)
+    );
+
+    return messages.map(HistoryMessage.from);
   }
 }
 

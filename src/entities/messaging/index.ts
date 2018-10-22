@@ -4,9 +4,11 @@
 
 import Message from './Message';
 import MessageAttachment from './MessageAttachment';
+import HistoryMessage from './HistoryMessage';
 
 export {
   Message,
+  HistoryMessage,
   MessageAttachment
 };
 
