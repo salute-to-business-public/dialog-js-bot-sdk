@@ -58,7 +58,10 @@ class Bot {
         flatMap(async (update) => {
           const missing = state.checkEntities(update);
           if (missing.length) {
-            const dialogs = await this.applyEntities(state, await this.rpc.loadMissingPeers(missing));
+            const dialogs = await this.applyEntities(
+              state,
+              await this.rpc.loadMissingPeers(missing)
+            );
             state.applyDialogs(dialogs);
           }
 
@@ -193,6 +196,13 @@ class Bot {
     );
 
     return this.rpc.sendMessage(outPeer, content, attachment);
+  }
+
+  /**
+   * Retrieves file url by location.
+   */
+  public fetchFileUrl(fileLocation: FileLocation): Promise<string> {
+    return this.rpc.fetchFileUrl(fileLocation);
   }
 }
 

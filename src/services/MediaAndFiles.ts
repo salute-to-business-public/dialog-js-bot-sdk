@@ -16,6 +16,13 @@ class MediaAndFiles {
     this.service = Bluebird.promisifyAll(new dialog.MediaAndFiles(endpoint, credentials));
   }
 
+  public getFileUrls(
+    request: dialog.RequestGetFileUrls,
+    metadata: Metadata
+  ): Promise<dialog.ResponseGetFileUrls> {
+    return this.service.getFileUrlsAsync(request, metadata);
+  }
+
   public getFileUploadUrl(
     request: dialog.RequestGetFileUploadUrl,
     metadata: Metadata

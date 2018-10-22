@@ -261,6 +261,20 @@ class Rpc extends Services {
 
     return location;
   }
+
+  async fetchFileUrl(fileLocation: FileLocation): Promise<string> {
+    const { fileUrls } = await this.mediaAndFiles.getFileUrls(
+      dialog.RequestGetFileUrls.create({ files: [fileLocation.toApi()] }),
+      await this.getMetadata()
+    );
+
+    const url = _.head(fileUrls);
+    if (url) {
+      return url.url;
+    }
+
+    throw new Error(`Unexpectedly failed to resolve file url for ${fileLocation.id}`);
+  }
 }
 
 export default Rpc;
