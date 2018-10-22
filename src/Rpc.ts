@@ -70,6 +70,15 @@ class Rpc extends Services {
     return res.user;
   }
 
+  async loadMissingPeers(peers: Array<dialog.Peer>): Promise<ResponseEntities<dialog.Dialog[]>> {
+    const { dialogs: payload, users, groups, userPeers, groupPeers } = await this.messaging.loadDialogs(
+      dialog.RequestLoadDialogs.create({ peersToLoad: peers }),
+      await this.getMetadata()
+    );
+
+    return { payload, users, groups, userPeers, groupPeers };
+  }
+
   async loadDialogs(): Promise<ResponseEntities<dialog.Dialog[]>> {
     const { dialogIndices } = await this.messaging.fetchDialogIndex(
       dialog.RequestFetchDialogIndex.create(),

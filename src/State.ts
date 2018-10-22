@@ -4,7 +4,7 @@
 
 import Long from 'long';
 import { dialog } from '@dlghq/dialog-api';
-import { Peer, User, Group, OutPeer } from './entities';
+import { Group, OutPeer, Peer, User } from './entities';
 import { Entities, PeerEntities, ResponseEntities } from './internal/types';
 import mapNotNull from './utils/mapNotNull';
 import PeerType from './entities/PeerType';
@@ -70,6 +70,34 @@ class State {
       users: userPeers.filter((peer) => !this.users.has(peer.uid)),
       groups: groupPeers.filter((peer) => !this.groups.has(peer.groupId))
     };
+  }
+
+  private hasPeer(peer: dialog.Peer) {
+    switch (peer.type) {
+      case dialog.PeerType.PEERTYPE_PRIVATE:
+        return this.users.has(peer.id);
+
+      case dialog.PeerType.PEERTYPE_GROUP:
+        return this.groups.has(peer.id);
+
+      default:
+        return true;
+    }
+  }
+
+  checkEntities(update: dialog.UpdateSeqUpdate): Array<dialog.Peer> {
+    const missingPeers: Array<dialog.Peer> = [];
+    if (update.updateMessage) {
+      if (update.updateMessage.peer && !this.hasPeer(update.updateMessage.peer)) {
+        missingPeers.push(update.updateMessage.peer);
+      }
+    }
+
+    return missingPeers;
+  }
+
+  applyUpdate(update: dialog.UpdateSeqUpdate) {
+
   }
 }
 

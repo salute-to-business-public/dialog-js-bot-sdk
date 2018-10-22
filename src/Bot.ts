@@ -52,7 +52,22 @@ class Bot {
     const dialogs = await this.applyEntities(state, await this.rpc.loadDialogs());
     state.applyDialogs(dialogs);
 
-    this.rpc.subscribeSeqUpdates().pipe(retry()).subscribe(this.updateSubject);
+    this.rpc.subscribeSeqUpdates()
+      .pipe(
+        retry(),
+        flatMap(async (update) => {
+          const missing = state.checkEntities(update);
+          if (missing.length) {
+            const dialogs = await this.applyEntities(state, await this.rpc.loadMissingPeers(missing));
+            state.applyDialogs(dialogs);
+          }
+
+          state.applyUpdate(update);
+
+          return update;
+        })
+      )
+      .subscribe(this.updateSubject);
 
     return state;
   }
