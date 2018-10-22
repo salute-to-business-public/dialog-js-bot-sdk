@@ -11,6 +11,18 @@ class Peer {
   public readonly type: PeerType;
   public readonly strId: null | string;
 
+  public static sip(strId: string) {
+    return new Peer(0, PeerType.SIP, strId);
+  }
+
+  public static private(id: number) {
+    return new Peer(id, PeerType.PRIVATE, null);
+  }
+
+  public static group(id: number) {
+    return new Peer(id, PeerType.GROUP, null);
+  }
+
   public static from(api: dialog.Peer | dialog.OutPeer) {
     const strId = getOpt(api.strId, null) || null;
     switch (api.type) {
@@ -32,6 +44,10 @@ class Peer {
     this.id = id;
     this.type = type;
     this.strId = strId;
+  }
+
+  public getKey() {
+    return `${this.type}_${this.id}`;
   }
 
   public toString() {
