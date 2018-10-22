@@ -11,9 +11,9 @@ import PeerType from './entities/PeerType';
 
 class State {
   public readonly self: User;
-  private readonly users: Map<number, User> = new Map();
-  private readonly groups: Map<number, Group> = new Map();
-  private readonly dialogs: Array<Peer> = [];
+  public readonly users: Map<number, User> = new Map();
+  public readonly groups: Map<number, Group> = new Map();
+  public readonly dialogs: Array<Peer> = [];
 
   constructor(self: User) {
     this.self = self;

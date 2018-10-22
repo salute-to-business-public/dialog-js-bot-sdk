@@ -11,6 +11,7 @@ import {
   UUID,
   Peer,
   User,
+  Group,
   ActionEvent,
   FileLocation,
   Message,
@@ -81,6 +82,30 @@ class Bot {
     state.applyEntities(entities);
 
     return responseEntities.payload;
+  }
+
+  /**
+   * Returns self (bot) user entity.
+   */
+  public async getSelf(): Promise<User> {
+    const state = await this.ready;
+    return state.self;
+  }
+
+  /**
+   * Returns user by id, if bot already seen this user before.
+   */
+  public async getUser(uid: number): Promise<null | User> {
+    const state = await this.ready;
+    return state.users.get(uid) || null;
+  }
+
+  /**
+   * Returns group by id, if bot already seen this group before.
+   */
+  public async getGroup(gid: number): Promise<null | Group> {
+    const state = await this.ready;
+    return state.groups.get(gid) || null;
   }
 
   /**
