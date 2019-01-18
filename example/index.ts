@@ -14,9 +14,11 @@ if (typeof token !== 'string') {
   throw new Error('BOT_TOKEN env variable not configured');
 }
 
+const endpoint = process.env.BOT_ENDPOINT || 'https://grpc-test.transmit.im:9443';
+
 const bot = new Bot({
   token,
-  endpoints: ['https://grpc-test.transmit.im:9443']
+  endpoints: [endpoint]
 });
 
 bot.updateSubject.subscribe({
