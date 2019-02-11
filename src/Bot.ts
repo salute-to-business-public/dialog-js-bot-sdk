@@ -242,6 +242,27 @@ class Bot {
 
     return messages.map(HistoryMessage.from);
   }
+
+  /**
+   * Finds user by nick.
+   */
+  public async findUserByNick(nick: string): Promise<User | null> {
+    const state = await this.ready;
+    const uids = await this.applyEntities(
+      state,
+      await this.rpc.searchContacts(nick)
+    );
+
+    const lowerNick = nick.toLowerCase();
+    for (let id of uids) {
+      const user = state.users.get(id);
+      if (user && user.nick && lowerNick === user.nick.toLowerCase()) {
+        return user;
+      }
+    }
+
+    return null;
+  }
 }
 
 export default Bot;

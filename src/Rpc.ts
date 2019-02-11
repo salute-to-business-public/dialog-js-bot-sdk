@@ -291,6 +291,24 @@ class Rpc extends Services {
       groupPeers: []
     };
   }
+
+  async searchContacts(nick: string): Promise<ResponseEntities<Array<number>>> {
+    const res = await this.contacts.searchContacts(
+      dialog.RequestSearchContacts.create({ request: nick }),
+      await this.getMetadata()
+    );
+    
+    return {
+      payload: _.uniq([
+        ...res.users.map((u) => u.id),
+        ...res.userPeers.map((p) => p.uid)
+      ]),
+      users: res.users,
+      groups: [],
+      userPeers: res.userPeers,
+      groupPeers: []
+    };
+  }
 }
 
 export default Rpc;
