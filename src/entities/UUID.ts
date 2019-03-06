@@ -32,7 +32,7 @@ class UUID {
   }
 
   public toJSON() {
-    return bytesToUuid([...this.msb.toBytes(), ...this.lsb.toBytes()]);
+    return this.toString();
   }
 }
 

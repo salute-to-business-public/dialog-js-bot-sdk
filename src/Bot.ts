@@ -3,7 +3,7 @@
  */
 
 
-import { Observable, Subject, EMPTY } from 'rxjs';
+import { Observable, Subject, of, EMPTY } from 'rxjs';
 import { flatMap, retry } from 'rxjs/operators';
 import { dialog } from '@dlghq/dialog-api';
 import Rpc from './Rpc';
@@ -112,11 +112,11 @@ class Bot {
   /**
    * Subscribes to messages stream.
    */
-  public onMessage(callback: (message: Message) => Promise<void>): Observable<void> {
+  public subscribeToMessages(): Observable<Message> {
     return this.updateSubject
       .pipe(flatMap((update) => {
         if (update.updateMessage) {
-          return callback(Message.from(update.updateMessage));
+          return of(Message.from(update.updateMessage));
         }
 
         return EMPTY;
@@ -126,11 +126,11 @@ class Bot {
   /**
    * Subscribes to messages stream.
    */
-  public onAction(callback: (message: ActionEvent) => Promise<void>): Observable<void> {
+  public subscribeToActions(): Observable<ActionEvent> {
     return this.updateSubject
       .pipe(flatMap((update) => {
         if (update.updateInteractiveMediaEvent) {
-          return callback(ActionEvent.from(update.updateInteractiveMediaEvent));
+          return of(ActionEvent.from(update.updateInteractiveMediaEvent));
         }
 
         return EMPTY;

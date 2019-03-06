@@ -19,29 +19,29 @@
   "author": "Nikita Gusakov <gusnkt@gmail.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@dlghq/dialog-api": "0.6.4",
+    "@dlghq/dialog-api": "0.7.0",
     "@grpc/proto-loader": "0.4.0",
     "bluebird": "3.5.3",
     "dataclass": "1.1.1",
-    "grpc": "1.18.0",
+    "grpc": "1.19.0",
     "jimp": "0.6.0",
     "lodash": "4.17.11",
     "mime": "2.4.0",
     "node-fetch": "2.3.0",
-    "rxjs": "6.3.3",
+    "rxjs": "6.4.0",
     "uuid": "3.3.2"
   },
   "devDependencies": {
-    "@types/bluebird": "3.5.25",
+    "@types/bluebird": "3.5.26",
     "@types/dotenv": "6.1.0",
-    "@types/node-fetch": "2.1.4",
+    "@types/node-fetch": "2.1.6",
     "@types/uuid": "3.4.4",
     "buildbranch": "2.0.1",
     "dotenv": "6.2.0",
-    "nodemon": "1.18.9",
-    "ts-node": "7.0.1",
+    "nodemon": "1.18.10",
+    "ts-node": "8.0.2",
     "typedoc": "0.14.2",
-    "typescript": "3.2.4"
+    "typescript": "3.3.3333"
   },
   "gh-pages-deploy": {
     "staticpath": "docs"

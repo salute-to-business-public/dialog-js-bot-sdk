@@ -31,7 +31,7 @@ class Messaging {
   sendMessage(
     request: dialog.RequestSendMessage,
     metadata: Metadata
-  ): Promise<dialog.ResponseSeqDate> {
+  ): Promise<dialog.ResponseSendMessage> {
     return this.service.sendMessageAsync(request, metadata);
   }
 

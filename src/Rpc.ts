@@ -191,13 +191,11 @@ class Rpc extends Services {
     attachment?: null | MessageAttachment,
     isOnlyForUser?: null | number
   ) {
-    const rid = await randomLong();
-
     const res = await this.messaging.sendMessage(
       dialog.RequestSendMessage.create({
-        rid,
         isOnlyForUser,
         peer: peer.toApi(),
+        deduplicationId: await randomLong(),
         message: contentToApi(content),
         reply: attachment ? attachment.toReplyApi() : null,
         forward: attachment ? attachment.toForwardApi() : null
@@ -205,11 +203,11 @@ class Rpc extends Services {
       await this.getMetadata()
     );
 
-    if (!res.mid) {
+    if (!res.messageId) {
       throw new Error('Unexpected behaviour');
     }
 
-    return UUID.from(res.mid);
+    return UUID.from(res.messageId);
   }
 
   async editMessage(mid: UUID, content: Content) {

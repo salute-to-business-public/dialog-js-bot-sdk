@@ -18,9 +18,9 @@ class User extends Record<User> {
     return new User({
       id: api.id,
       accessHash: api.accessHash,
-      name: api.name,
-      isBot: getOpt(api.isBot, false),
-      nick: getOpt(api.nick, null)
+      name: api.data ? api.data.name : 'unknown',
+      isBot: api.data ? getOpt(api.data.isBot, false) : false,
+      nick: api.data ? getOpt(api.data.nick, null) : null 
     });
   }
 }
