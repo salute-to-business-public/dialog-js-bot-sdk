@@ -5,7 +5,7 @@
 import dotenv from 'dotenv';
 import { combineLatest } from 'rxjs';
 import { tap, filter, take } from 'rxjs/operators';
-import Bot, { User, Peer } from '../index';
+import Bot, { Peer } from '../index';
 
 let bot1: Bot;
 let bot2: Bot;
@@ -47,6 +47,7 @@ afterAll(() => {
 
 test('bot2 should receive message from bot1', () => {
   const text = 'hello, world!';
+  const now = Date.now();
 
   return combineLatest(
     bot2.subscribeToMessages(),
@@ -59,6 +60,8 @@ test('bot2 should receive message from bot1', () => {
         if (message.content.type === 'text') {
           expect(message.content.text).toBe(text);
         }
+
+        expect(message.date.getMilliseconds()).toBeGreaterThanOrEqual(now);
       })
     )
     .toPromise();
