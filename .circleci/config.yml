@@ -11,7 +11,7 @@ jobs:
       - run:
           environment:
             JEST_JUNIT_OUTPUT: reports/junit/js-test-results.xml
-          command: npm test -- --ci --coverage --maxWorkers=2
+          command: npm test -- --ci --coverage --maxWorkers=2 --reporters=default --reporters=jest-junit
       - run: npx codecov
       - store_test_results:
           path: reports/junit

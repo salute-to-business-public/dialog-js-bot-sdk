@@ -40,6 +40,7 @@
     "buildbranch": "2.0.1",
     "dotenv": "8.0.0",
     "jest": "24.8.0",
+    "jest-junit": "^6.4.0",
     "nodemon": "1.19.1",
     "ts-jest": "24.0.2",
     "ts-node": "8.2.0",
