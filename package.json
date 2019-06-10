@@ -4,7 +4,7 @@
   "description": "Dialog Bot SDK",
   "main": "lib/index.js",
   "scripts": {
-    "test": "exit 0",
+    "test": "jest",
     "predocs": "rm -rf docs/",
     "docs": "typedoc --excludePrivate --theme minimal --mode file --out docs src/index.ts",
     "postdocs": "buildbranch gh-pages docs",
@@ -19,7 +19,7 @@
   "author": "Nikita Gusakov <gusnkt@gmail.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@dlghq/dialog-api": "0.8.0",
+    "@dlghq/dialog-api": "0.9.0",
     "@grpc/proto-loader": "0.5.1",
     "bluebird": "3.5.5",
     "dataclass": "1.1.1",
@@ -34,11 +34,15 @@
   "devDependencies": {
     "@types/bluebird": "3.5.27",
     "@types/dotenv": "6.1.1",
+    "@types/jest": "24.0.13",
     "@types/node-fetch": "2.3.5",
     "@types/uuid": "3.4.4",
     "buildbranch": "2.0.1",
     "dotenv": "8.0.0",
+    "jest": "24.8.0",
+    "jest-junit": "^6.4.0",
     "nodemon": "1.19.1",
+    "ts-jest": "24.0.2",
     "ts-node": "8.2.0",
     "typedoc": "0.14.2",
     "typescript": "3.5.1"

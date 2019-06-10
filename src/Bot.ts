@@ -3,7 +3,7 @@
  */
 
 
-import { Observable, Subject, of, EMPTY } from 'rxjs';
+import { Observable, Subject, of, EMPTY, Subscription } from 'rxjs';
 import { flatMap, retry } from 'rxjs/operators';
 import { dialog } from '@dlghq/dialog-api';
 import Rpc from './Rpc';
@@ -37,6 +37,7 @@ class Bot {
   private readonly rpc: Rpc;
   private readonly ready: Promise<State>;
   public readonly updateSubject: Subject<dialog.UpdateSeqUpdate> = new Subject();
+  private subscriptions: Array<Subscription> = [];
 
   constructor(config: Config) {
     const endpoint = config.endpoints.map((url) => new URL(url)).find(() => true);
@@ -48,13 +49,18 @@ class Bot {
     this.ready = this.start(config.token);
   }
 
+  public stop() {
+    this.subscriptions.forEach((subscription) => subscription.unsubscribe());
+    this.subscriptions = [];
+  }
+
   private async start(token: string) {
     const self = User.from(await this.rpc.authorize(token));
     const state = new State(self);
     const dialogs = await this.applyEntities(state, await this.rpc.loadDialogs());
     state.applyDialogs(dialogs);
 
-    this.rpc.subscribeSeqUpdates()
+    const subscription = this.rpc.subscribeSeqUpdates()
       .pipe(
         retry(),
         flatMap(async (update) => {
@@ -73,6 +79,8 @@ class Bot {
         })
       )
       .subscribe(this.updateSubject);
+    
+    this.subscriptions.push(subscription);
 
     return state;
   }
