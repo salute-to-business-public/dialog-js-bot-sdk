@@ -1,5 +1,23 @@
 version: 2
 
+git_config: &git_config
+  name: configure git bot
+  command: |
+    if [ -z "$CIRCLE_PR_USERNAME" -a "$CIRCLE_USERNAME" != "dialog-bot" -a -n "$CIRCLE_USERNAME" ]
+    then
+      apt-get update
+      apt-get install gnupg2 -y
+      echo "$GITHUB_BOT_GPG_KEY" | base64 --decode > private.key
+      gpg2 --version
+      gpg2 --allow-secret-key-import --import private.key
+      git config gpg.program gpg2
+      git config commit.gpgsign true
+      git config user.signingkey "$GITHUB_BOT_GPG_KEY_ID"
+      git config credential.helper 'cache --timeout=120'
+      git config user.name "$GITHUB_BOT_USERNAME"
+      git config user.email "$GITHUB_BOT_EMAIL"
+    fi
+
 jobs:
   test:
     docker:
@@ -24,6 +42,8 @@ jobs:
     docker:
       - image: node:10
     steps:
+      - run:
+          <<: *git_config
       - checkout
       - run: npm ci
       - run: npm run docs
