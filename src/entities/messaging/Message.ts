@@ -7,6 +7,7 @@ import Peer from '../Peer';
 import UUID from '../UUID';
 import { Content, apiToContent } from './content';
 import MessageAttachment from './MessageAttachment';
+import parseDateFromLong from '../../utils/parseDateFromLong';
 
 class Message {
   /**
@@ -50,7 +51,7 @@ class Message {
     return new Message(
       UUID.from(api.mid),
       Peer.from(api.peer),
-      new Date(api.date.toInt()),
+      parseDateFromLong(api.date),
       apiToContent(api.message),
       MessageAttachment.from(api.reply, api.forward)
     );

@@ -7,6 +7,7 @@ import UUID from '../UUID';
 import { Content, apiToContent } from './content';
 import MessageAttachment from './MessageAttachment';
 import OutPeer from '../OutPeer';
+import parseDateFromLong from '../../utils/parseDateFromLong';
 
 class HistoryMessage {
   static from(api: dialog.HistoryMessage) {
@@ -23,7 +24,7 @@ class HistoryMessage {
       api.hostPeer ? OutPeer.from(api.hostPeer) : null,
       api.senderUid,
       api.senderPeer ? OutPeer.from(api.senderPeer) : null,
-      new Date(api.date.toInt()),
+      parseDateFromLong(api.date),
       apiToContent(api.message),
       MessageAttachment.from(api.reply, api.forward)
     );

@@ -61,7 +61,7 @@ test('bot2 should receive message from bot1', () => {
           expect(message.content.text).toBe(text);
         }
 
-        expect(message.date.getMilliseconds()).toBeGreaterThanOrEqual(now);
+        expect(message.date.getTime()).toBeGreaterThanOrEqual(now);
       })
     )
     .toPromise();
