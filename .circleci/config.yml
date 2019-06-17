@@ -57,10 +57,10 @@ workflows:
             branches:
               ignore:
                 - gh-pages
-      - docs:
-          requires:
-            - test
-          filters:
-            branches:
-              only:
-                - master
+      # - docs:
+      #     requires:
+      #       - test
+      #     filters:
+      #       branches:
+      #         only:
+      #           - master
