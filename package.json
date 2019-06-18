@@ -34,9 +34,9 @@
   "devDependencies": {
     "@types/bluebird": "3.5.27",
     "@types/dotenv": "6.1.1",
-    "@types/jest": "24.0.13",
+    "@types/jest": "24.0.15",
     "@types/long": "4.0.0",
-    "@types/node-fetch": "2.3.5",
+    "@types/node-fetch": "2.3.7",
     "@types/uuid": "3.4.4",
     "buildbranch": "2.0.1",
     "dotenv": "8.0.0",
@@ -44,9 +44,9 @@
     "jest-junit": "6.4.0",
     "nodemon": "1.19.1",
     "ts-jest": "24.0.2",
-    "ts-node": "8.2.0",
+    "ts-node": "8.3.0",
     "typedoc": "0.14.2",
-    "typescript": "3.5.1"
+    "typescript": "3.5.2"
   },
   "gh-pages-deploy": {
     "staticpath": "docs"
