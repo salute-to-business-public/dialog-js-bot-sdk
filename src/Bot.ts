@@ -27,10 +27,12 @@ import getFileInfo from './utils/getFileInfo';
 import createImagePreview from './utils/createImagePreview';
 import normalizeArray from './utils/normalizeArray';
 import DeletedContent from './entities/messaging/content/DeletedContent';
+import { SSLConfig } from './utils/createCredentials';
 
 type Config = {
   token: string,
-  endpoints: Array<string>
+  endpoints: Array<string>,
+  ssl?: SSLConfig
 };
 
 class Bot {
@@ -45,7 +47,7 @@ class Bot {
       throw new Error('Endpoints misconfigured');
     }
 
-    this.rpc = new Rpc(endpoint);
+    this.rpc = new Rpc(endpoint, config.ssl);
     this.ready = this.start(config.token);
   }
 
@@ -79,7 +81,7 @@ class Bot {
         })
       )
       .subscribe(this.updateSubject);
-    
+
     this.subscriptions.push(subscription);
 
     return state;

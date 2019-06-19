@@ -7,7 +7,7 @@ import _ from 'lodash';
 import Bluebird from 'bluebird';
 import { Metadata } from 'grpc';
 import { dialog, google } from '@dlghq/dialog-api';
-import createCredentials from './utils/createCredentials';
+import createCredentials, { SSLConfig } from './utils/createCredentials';
 import Services from './services';
 import mapNotNull from './utils/mapNotNull';
 import reduce from './utils/reduce';
@@ -28,8 +28,8 @@ const pkg = require('../package.json');
 class Rpc extends Services {
   private metadata: null | Promise<Metadata> = null;
 
-  constructor(endpoint: URL) {
-    super(endpoint, createCredentials(endpoint));
+  constructor(endpoint: URL, ssl: SSLConfig | void) {
+    super(endpoint, createCredentials(endpoint, ssl));
   }
 
   async getMetadata() {
@@ -295,7 +295,7 @@ class Rpc extends Services {
       dialog.RequestSearchContacts.create({ request: nick }),
       await this.getMetadata()
     );
-    
+
     return {
       payload: _.uniq([
         ...res.users.map((u) => u.id),

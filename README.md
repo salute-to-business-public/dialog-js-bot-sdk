@@ -29,7 +29,7 @@ if (typeof token !== 'string') {
 
 const bot = new Bot({
   token,
-  endpoints: ['https://grpc-test.transmit.im:9443']
+  endpoints: ['https://epm.dlg.im']
 });
 
 bot.updateSubject.subscribe({
@@ -52,12 +52,32 @@ bot
       await bot.sendDocument(message.peer, __filename, MessageAttachment.reply(mid));
     }
   })
-  .toPromise()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
+  .subscribe({
+    error(error) {
+      console.error(error);
+      process.exit(1);
+    }
   });
+```
 
+Mutual authentication
+---------------------
+
+In case your server requires mutual authentication, you can pass credentials like this.
+
+```typescript
+import fs from 'fs';
+import Bot from '@dlghq/dialog-bot-sdk';
+
+const bot = new Bot({
+  token,
+  endpoints: ['https://epm.dlg.im'],
+  ssl: {
+    rootCerts: fs.readFileSync(path.join(__dirname, 'dialog-root-cert.crt')),
+    privateKey: fs.readFileSync(path.join(__dirname, 'client.key')),
+    certChain: fs.readFileSync(path.join(__dirname, 'client.crt'))
+  }
+});
 ```
 
 License
