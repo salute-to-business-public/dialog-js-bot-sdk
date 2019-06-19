@@ -43,7 +43,7 @@ beforeAll(async () => {
 afterAll(() => {
   bot1.stop();
   bot2.stop();
-})
+});
 
 test('bot2 should receive message from bot1', () => {
   const text = 'hello, world!';
@@ -61,7 +61,7 @@ test('bot2 should receive message from bot1', () => {
           expect(message.content.text).toBe(text);
         }
 
-        expect(message.date.getTime()).toBeGreaterThanOrEqual(now);
+        expect(Math.abs(message.date.getTime() - now)).toBeLessThanOrEqual(5000);
       })
     )
     .toPromise();
