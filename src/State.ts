@@ -7,12 +7,14 @@ import { Group, OutPeer, Peer, User, PeerType } from './entities';
 import { Entities, PeerEntities, ResponseEntities } from './internal/types';
 import mapNotNull from './utils/mapNotNull';
 import { PeerNotFoundError } from './errors';
+import { getOpt } from './entities/utils';
 
 class State {
   public readonly self: User;
   public readonly users: Map<number, User> = new Map();
   public readonly groups: Map<number, Group> = new Map();
   public readonly dialogs: Array<Peer> = [];
+  public readonly parameters: Map<string, string> = new Map();
 
   constructor(self: User) {
     this.self = self;
@@ -84,6 +86,10 @@ class State {
     }
   }
 
+  applyParameters(parameters: Map<string, string>) {
+    parameters.forEach((value, key) => this.parameters.set(key, value));
+  }
+
   checkEntities(update: dialog.UpdateSeqUpdate): Array<dialog.Peer> {
     const missingPeers: Array<dialog.Peer> = [];
     if (update.updateMessage) {
@@ -96,7 +102,19 @@ class State {
   }
 
   applyUpdate(update: dialog.UpdateSeqUpdate) {
+    if (update.updateParameterChanged) {
+      this.handleParameterChanged(update.updateParameterChanged);
+    }
+  }
 
+  private handleParameterChanged(update: dialog.UpdateParameterChanged) {
+    const { key } = update;
+    const value = getOpt(update.value, null);
+    if (value === null) {
+      this.parameters.delete(key);
+    } else {
+      this.parameters.set(key, value);
+    }
   }
 }
 

@@ -307,6 +307,28 @@ class Rpc extends Services {
       groupPeers: []
     };
   }
+
+  async getParameters(): Promise<Map<string, string>> {
+    const res = await this.parameters.getParameters(
+      dialog.RequestGetParameters.create(),
+      await this.getMetadata()
+    );
+
+    const parameters = new Map();
+    res.parameters.forEach(({ key, value }) => parameters.set(key, value));
+
+    return parameters;
+  }
+
+  async editParameter(key: string, value: string): Promise<void> {
+    await this.parameters.editParameter(
+      dialog.RequestEditParameter.create({
+        key,
+        value: google.protobuf.StringValue.create({ value })
+      }),
+      await this.getMetadata()
+    );
+  }
 }
 
 export default Rpc;

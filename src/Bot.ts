@@ -62,6 +62,8 @@ class Bot {
     const dialogs = await this.applyEntities(state, await this.rpc.loadDialogs());
     state.applyDialogs(dialogs);
 
+    state.applyParameters(await this.rpc.getParameters());
+
     const subscription = this.rpc.subscribeSeqUpdates()
       .pipe(
         retry(),
@@ -272,6 +274,20 @@ class Bot {
     }
 
     return null;
+  }
+
+  public async getParameter(key: string): Promise<string | null> {
+    const state = await this.ready;
+
+    return state.parameters.get(key) || null;
+  }
+
+  public async setParameter(key: string, value: string): Promise<void> {
+    const state = await this.ready;
+
+    await this.rpc.editParameter(key, value);
+
+    state.parameters.set(key, value);
   }
 }
 
