@@ -26,9 +26,9 @@ import UUID from './entities/UUID';
 const pkg = require('../package.json');
 
 type Config = {
-  ssl?: SSLConfig,
-  logger: Logger,
-  endpoint: URL
+  ssl?: SSLConfig;
+  logger: Logger;
+  endpoint: URL;
 };
 
 class Rpc extends Services {
@@ -39,20 +39,21 @@ class Rpc extends Services {
       logger,
       endpoint: endpoint.host,
       credentials: createCredentials(endpoint, ssl),
-      generateMetadata: () => this.getMetadata()
+      generateMetadata: () => this.getMetadata(),
     });
   }
 
   async getMetadata() {
     if (!this.metadata) {
-      this.metadata = this.registration.registerDevice(
-        dialog.RequestRegisterDevice.create({
-          appId: 1,
-          appTitle: 'bot',
-          clientPk: Buffer.alloc(32),
-          deviceTitle: `dialog-bot-sdk/v${pkg.version} node/${process.version}`
-        })
-      )
+      this.metadata = this.registration
+        .registerDevice(
+          dialog.RequestRegisterDevice.create({
+            appId: 1,
+            appTitle: 'bot',
+            clientPk: Buffer.alloc(32),
+            deviceTitle: `dialog-bot-sdk/v${pkg.version} node/${process.version}`,
+          }),
+        )
         .then((res) => {
           const metadata = new Metadata();
           metadata.set('x-auth-ticket', res.token);
@@ -70,8 +71,8 @@ class Rpc extends Services {
         token,
         appId: 1,
         timeZone: google.protobuf.StringValue.create({ value: 'UTC' }),
-        preferredLanguages: ['en']
-      })
+        preferredLanguages: ['en'],
+      }),
     );
 
     if (!res.user) {
@@ -81,8 +82,16 @@ class Rpc extends Services {
     return res.user;
   }
 
-  async loadMissingPeers(peers: Array<dialog.Peer>): Promise<ResponseEntities<dialog.Dialog[]>> {
-    const { dialogs: payload, users, groups, userPeers, groupPeers } = await this.messaging.loadDialogs(
+  async loadMissingPeers(
+    peers: Array<dialog.Peer>,
+  ): Promise<ResponseEntities<dialog.Dialog[]>> {
+    const {
+      dialogs: payload,
+      users,
+      groups,
+      userPeers,
+      groupPeers,
+    } = await this.messaging.loadDialogs(
       dialog.RequestLoadDialogs.create({ peersToLoad: peers }),
     );
 
@@ -96,11 +105,14 @@ class Rpc extends Services {
 
     const peers = mapNotNull(dialogIndices, (index) => index.peer);
 
-    const responses = await Bluebird.mapSeries(_.chunk(peers, 10), async (peersToLoad) => {
-      return this.messaging.loadDialogs(
-        dialog.RequestLoadDialogs.create({ peersToLoad }),
-      );
-    });
+    const responses = await Bluebird.mapSeries(
+      _.chunk(peers, 10),
+      async (peersToLoad) => {
+        return this.messaging.loadDialogs(
+          dialog.RequestLoadDialogs.create({ peersToLoad }),
+        );
+      },
+    );
 
     const entities = reduce(
       responses,
@@ -113,7 +125,7 @@ class Rpc extends Services {
         entities.groupPeers.push(...res.groupPeers);
 
         return entities;
-      }
+      },
     );
 
     return {
@@ -121,7 +133,7 @@ class Rpc extends Services {
       users: entities.users,
       groups: entities.groups,
       userPeers: entities.userPeers,
-      groupPeers: entities.groupPeers
+      groupPeers: entities.groupPeers,
     };
   }
 
@@ -133,7 +145,7 @@ class Rpc extends Services {
 
   private async getInitialState() {
     const { seq, state } = await this.sequenceAndUpdates.getState(
-      dialog.RequestGetState.create()
+      dialog.RequestGetState.create(),
     );
 
     return { seq, state };
@@ -175,24 +187,25 @@ class Rpc extends Services {
   // }
 
   subscribeSeqUpdates(): Observable<dialog.UpdateSeqUpdate> {
-    return from(this.getInitialState())
-      .pipe(
-        flatMap(() => this.sequenceAndUpdates.seqUpdates(google.protobuf.Empty.create())),
-        map(({ unboxedUpdate }) => {
-          if (unboxedUpdate) {
-            return unboxedUpdate;
-          }
+    return from(this.getInitialState()).pipe(
+      flatMap(() =>
+        this.sequenceAndUpdates.seqUpdates(google.protobuf.Empty.create()),
+      ),
+      map(({ unboxedUpdate }) => {
+        if (unboxedUpdate) {
+          return unboxedUpdate;
+        }
 
-          throw new Error('Unexpected behaviour');
-        })
-      );
+        throw new Error('Unexpected behaviour');
+      }),
+    );
   }
 
   async sendMessage(
     peer: OutPeer,
     content: Content,
     attachment?: null | MessageAttachment,
-    isOnlyForUser?: null | number
+    isOnlyForUser?: null | number,
   ) {
     const res = await this.messaging.sendMessage(
       dialog.RequestSendMessage.create({
@@ -201,8 +214,8 @@ class Rpc extends Services {
         deduplicationId: await randomLong(),
         message: contentToApi(content),
         reply: attachment ? attachment.toReplyApi() : null,
-        forward: attachment ? attachment.toForwardApi() : null
-      })
+        forward: attachment ? attachment.toForwardApi() : null,
+      }),
     );
 
     if (!res.messageId) {
@@ -216,43 +229,56 @@ class Rpc extends Services {
     await this.messaging.updateMessage(
       dialog.RequestUpdateMessage.create({
         mid: mid.toApi(),
-        updatedMessage: contentToApi(content)
-      })
+        updatedMessage: contentToApi(content),
+      }),
     );
   }
 
-  async uploadFile(fileName: string, fileInfo: FileInfo, maxChunkSize: number = 1024 * 1024) {
+  async uploadFile(
+    fileName: string,
+    fileInfo: FileInfo,
+    maxChunkSize: number = 1024 * 1024,
+  ) {
     const { uploadKey } = await this.mediaAndFiles.getFileUploadUrl(
-      dialog.RequestGetFileUploadUrl.create({ expectedSize: fileInfo.size })
+      dialog.RequestGetFileUploadUrl.create({ expectedSize: fileInfo.size }),
     );
 
     let partNumber = 0;
     const location = await fromReadStream(
-      fs.createReadStream(fileName, { highWaterMark: maxChunkSize })
+      fs.createReadStream(fileName, { highWaterMark: maxChunkSize }),
     )
-      .pipe(flatMap(async (chunk) => {
-        const { url } = await this.mediaAndFiles.getFileUploadPartUrl(
-          dialog.RequestGetFileUploadPartUrl.create({
-            uploadKey,
-            partSize: chunk.length,
-            partNumber: partNumber++
-          })
-        );
+      .pipe(
+        flatMap(async (chunk) => {
+          const { url } = await this.mediaAndFiles.getFileUploadPartUrl(
+            dialog.RequestGetFileUploadPartUrl.create({
+              uploadKey,
+              partSize: chunk.length,
+              partNumber: partNumber++,
+            }),
+          );
 
-        await this.mediaAndFiles.uploadChunk(url, chunk);
-      }))
+          await this.mediaAndFiles.uploadChunk(url, chunk);
+        }),
+      )
       .pipe(last())
-      .pipe(flatMap(async () => {
-        const { uploadedFileLocation } = await this.mediaAndFiles.commitFileUpload(
-          dialog.RequestCommitFileUpload.create({ uploadKey, fileName: fileInfo.name })
-        );
+      .pipe(
+        flatMap(async () => {
+          const {
+            uploadedFileLocation,
+          } = await this.mediaAndFiles.commitFileUpload(
+            dialog.RequestCommitFileUpload.create({
+              uploadKey,
+              fileName: fileInfo.name,
+            }),
+          );
 
-        if (!uploadedFileLocation) {
-          throw new Error('File unexpectedly failed');
-        }
+          if (!uploadedFileLocation) {
+            throw new Error('File unexpectedly failed');
+          }
 
-        return uploadedFileLocation;
-      }))
+          return uploadedFileLocation;
+        }),
+      )
       .toPromise();
 
     return location;
@@ -260,7 +286,7 @@ class Rpc extends Services {
 
   async fetchFileUrl(fileLocation: FileLocation): Promise<string> {
     const { fileUrls } = await this.mediaAndFiles.getFileUrls(
-      dialog.RequestGetFileUrls.create({ files: [fileLocation.toApi()] })
+      dialog.RequestGetFileUrls.create({ files: [fileLocation.toApi()] }),
     );
 
     const url = _.head(fileUrls);
@@ -268,12 +294,18 @@ class Rpc extends Services {
       return url.url;
     }
 
-    throw new Error(`Unexpectedly failed to resolve file url for ${fileLocation.id}`);
+    throw new Error(
+      `Unexpectedly failed to resolve file url for ${fileLocation.id}`,
+    );
   }
 
-  async fetchMessages(mids: Array<UUID>): Promise<ResponseEntities<dialog.HistoryMessage[]>> {
+  async fetchMessages(
+    mids: Array<UUID>,
+  ): Promise<ResponseEntities<dialog.HistoryMessage[]>> {
     const entities = await this.sequenceAndUpdates.getReferencedEntities(
-      dialog.RequestGetReferencedEntitites.create({ mids: mids.map((mid) => mid.toApi()) })
+      dialog.RequestGetReferencedEntitites.create({
+        mids: mids.map((mid) => mid.toApi()),
+      }),
     );
 
     return {
@@ -281,30 +313,30 @@ class Rpc extends Services {
       users: entities.users,
       groups: entities.groups,
       userPeers: [],
-      groupPeers: []
+      groupPeers: [],
     };
   }
 
   async searchContacts(nick: string): Promise<ResponseEntities<Array<number>>> {
     const res = await this.contacts.searchContacts(
-      dialog.RequestSearchContacts.create({ request: nick })
+      dialog.RequestSearchContacts.create({ request: nick }),
     );
 
     return {
       payload: _.uniq([
         ...res.users.map((u) => u.id),
-        ...res.userPeers.map((p) => p.uid)
+        ...res.userPeers.map((p) => p.uid),
       ]),
       users: res.users,
       groups: [],
       userPeers: res.userPeers,
-      groupPeers: []
+      groupPeers: [],
     };
   }
 
   async getParameters(): Promise<Map<string, string>> {
     const res = await this.parameters.getParameters(
-      dialog.RequestGetParameters.create()
+      dialog.RequestGetParameters.create(),
     );
 
     const parameters = new Map();
@@ -317,8 +349,8 @@ class Rpc extends Services {
     await this.parameters.editParameter(
       dialog.RequestEditParameter.create({
         key,
-        value: google.protobuf.StringValue.create({ value })
-      })
+        value: google.protobuf.StringValue.create({ value }),
+      }),
     );
   }
 }

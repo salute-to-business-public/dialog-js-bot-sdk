@@ -13,16 +13,24 @@ class Parameters extends Service<any> {
 
   getParameters(
     request: dialog.RequestGetParameters,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseGetParameters> {
-    return this.service.getParametersAsync(request, metadata, this.getCallOptions());
+    return this.service.getParametersAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 
   editParameter(
     request: dialog.RequestEditParameter,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseSeq> {
-    return this.service.editParameterAsync(request, metadata, this.getCallOptions());
+    return this.service.editParameterAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 }
 

@@ -11,8 +11,5 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "exclude": [
-    "lib",
-    "example"
-  ]
+  "exclude": ["lib", "example"]
 }

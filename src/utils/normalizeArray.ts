@@ -3,7 +3,7 @@
  */
 
 function normalizeArray<T>(value: undefined | null | T | Array<T>): Array<T> {
-  return value ? Array.isArray(value) ? value : [value] : []
+  return value ? (Array.isArray(value) ? value : [value]) : [];
 }
 
 export default normalizeArray;

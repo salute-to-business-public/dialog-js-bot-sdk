@@ -89,7 +89,7 @@ class PeerMap<T> {
         return this;
 
       default:
-        throw new Error('PeerMap doesn\'t support unknown types');
+        throw new Error("PeerMap doesn't support unknown types");
     }
   }
 }

@@ -13,9 +13,13 @@ class Contacts extends Service<any> {
 
   searchContacts(
     request: dialog.RequestSearchContacts,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseSearchContacts> {
-    return this.service.searchContactsAsync(request, metadata, this.getCallOptions());
+    return this.service.searchContactsAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 }
 

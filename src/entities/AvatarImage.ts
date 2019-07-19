@@ -15,7 +15,9 @@ class AvatarImage {
     this.width = api.width;
     this.height = api.height;
     this.size = api.fileSize;
-    this.location = api.fileLocation ? FileLocation.from(api.fileLocation) : null;
+    this.location = api.fileLocation
+      ? FileLocation.from(api.fileLocation)
+      : null;
   }
 
   public toApi() {
@@ -23,7 +25,7 @@ class AvatarImage {
       width: this.width,
       height: this.height,
       fileSize: this.size,
-      fileLocation: this.location ? this.location.toApi() : null
+      fileLocation: this.location ? this.location.toApi() : null,
     });
   }
 

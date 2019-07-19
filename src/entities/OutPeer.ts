@@ -28,8 +28,10 @@ class OutPeer {
     return dialog.OutPeer.create({
       id: this.peer.id,
       type: peerTypeToApi(this.peer.type),
-      strId: this.peer.strId ? google.protobuf.StringValue.create({ value: this.peer.strId }) : null,
-      accessHash: this.accessHash
+      strId: this.peer.strId
+        ? google.protobuf.StringValue.create({ value: this.peer.strId })
+        : null,
+      accessHash: this.accessHash,
     });
   }
 

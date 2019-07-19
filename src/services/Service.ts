@@ -4,7 +4,15 @@
 
 import { Logger } from 'pino';
 import Bluebird from 'bluebird';
-import { propagate, credentials, Metadata, CallOptions, CallCredentials, ChannelCredentials, Client } from 'grpc';
+import {
+  propagate,
+  credentials,
+  Metadata,
+  CallOptions,
+  CallCredentials,
+  ChannelCredentials,
+  Client,
+} from 'grpc';
 import createLogInterceptor from './interceptors/logger';
 
 const DEFAULT_DEADLINE = 30 * 1000;
@@ -12,15 +20,15 @@ const DEFAULT_DEADLINE = 30 * 1000;
 export type MetadataGenerator = (serviceUrl: string) => Promise<Metadata>;
 
 export type Config = {
-  logger: Logger,
-  endpoint: string,
-  credentials: ChannelCredentials,
-  generateMetadata: MetadataGenerator,
+  logger: Logger;
+  endpoint: string;
+  credentials: ChannelCredentials;
+  generateMetadata: MetadataGenerator;
 };
 
 type CallOptionsConfig = {
-  deadline?: number,
-  authRequired?: boolean
+  deadline?: number;
+  authRequired?: boolean;
 };
 
 abstract class Service<T extends Client> {
@@ -30,31 +38,36 @@ abstract class Service<T extends Client> {
 
   protected constructor(ServiceImpl: T, config: Config) {
     // @ts-ignore
-    this.service = Bluebird.promisifyAll(new ServiceImpl(config.endpoint, config.credentials, {
-      interceptors: [
-        createLogInterceptor(config.logger)
-      ]
-    }));
+    this.service = Bluebird.promisifyAll(
+      new ServiceImpl(config.endpoint, config.credentials, {
+        interceptors: [createLogInterceptor(config.logger)],
+      }),
+    );
 
-    this.credentials = credentials.createFromMetadataGenerator((params, callback) => {
-      config.generateMetadata(params.service_url)
-        .then((metadata) => callback(null, metadata))
-        .catch((error) => callback(error));
-    });
+    this.credentials = credentials.createFromMetadataGenerator(
+      (params, callback) => {
+        config
+          .generateMetadata(params.service_url)
+          .then((metadata) => callback(null, metadata))
+          .catch((error) => callback(error));
+      },
+    );
 
-    this.noopCredentials = credentials.createFromMetadataGenerator((params, callback) => {
-      callback(null, new Metadata());
-    });
+    this.noopCredentials = credentials.createFromMetadataGenerator(
+      (params, callback) => {
+        callback(null, new Metadata());
+      },
+    );
   }
 
   protected getCallOptions({
     deadline = DEFAULT_DEADLINE,
-    authRequired = true
+    authRequired = true,
   }: CallOptionsConfig = {}): CallOptions {
     return {
       deadline: Date.now() + deadline,
       credentials: authRequired ? this.credentials : this.noopCredentials,
-      propagate_flags: propagate.DEFAULTS
+      propagate_flags: propagate.DEFAULTS,
     };
   }
 

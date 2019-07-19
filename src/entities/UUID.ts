@@ -5,7 +5,9 @@
 import Long from 'long';
 import { dialog } from '@dlghq/dialog-api';
 
-const bytesToUuid: (bytes: number[]) => string = require('uuid/lib/bytesToUuid');
+const bytesToUuid: (
+  bytes: number[],
+) => string = require('uuid/lib/bytesToUuid');
 
 class UUID {
   private readonly msb: Long;
@@ -23,7 +25,7 @@ class UUID {
   public toApi() {
     return new dialog.UUIDValue({
       msb: this.msb,
-      lsb: this.lsb
+      lsb: this.lsb,
     });
   }
 

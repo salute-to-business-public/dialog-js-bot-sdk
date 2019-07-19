@@ -5,19 +5,19 @@
 import { dialog } from '@dlghq/dialog-api';
 
 export type Entities = {
-  users: dialog.User[],
-  groups: dialog.Group[]
+  users: dialog.User[];
+  groups: dialog.Group[];
 };
 
 export type PeerEntities = {
-  users: dialog.UserOutPeer[],
-  groups: dialog.GroupOutPeer[]
+  users: dialog.UserOutPeer[];
+  groups: dialog.GroupOutPeer[];
 };
 
 export type ResponseEntities<T> = {
-  payload: T,
-  users: dialog.User[],
-  groups: dialog.Group[],
-  userPeers: dialog.UserOutPeer[],
-  groupPeers: dialog.GroupOutPeer[]
-}
+  payload: T;
+  users: dialog.User[];
+  groups: dialog.Group[];
+  userPeers: dialog.UserOutPeer[];
+  groupPeers: dialog.GroupOutPeer[];
+};

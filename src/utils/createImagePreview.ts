@@ -10,14 +10,21 @@ import { FilePreview, DocumentPhotoExtension } from '../entities';
  */
 async function createImagePreview(fileName: string) {
   const image = await Jimp.read(fileName);
-  const extension = DocumentPhotoExtension.create(image.bitmap.width, image.bitmap.height);
+  const extension = DocumentPhotoExtension.create(
+    image.bitmap.width,
+    image.bitmap.height,
+  );
 
   const preview = image.resize(Jimp.AUTO, 100).quality(60);
   const content = await preview.getBufferAsync('image/jpeg');
 
   return {
     extension,
-    preview: FilePreview.create(preview.bitmap.width, preview.bitmap.height, content)
+    preview: FilePreview.create(
+      preview.bitmap.width,
+      preview.bitmap.height,
+      content,
+    ),
   };
 }
 

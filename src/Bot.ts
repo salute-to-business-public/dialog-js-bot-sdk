@@ -2,7 +2,6 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-
 import pino, { Logger, LoggerOptions } from 'pino';
 import { Observable, Subject, of, EMPTY, Subscription } from 'rxjs';
 import { flatMap, retry } from 'rxjs/operators';
@@ -20,7 +19,7 @@ import {
   ActionGroup,
   TextContent,
   DocumentContent,
-  MessageAttachment
+  MessageAttachment,
 } from './entities';
 import State from './State';
 import { ResponseEntities } from './internal/types';
@@ -31,10 +30,10 @@ import DeletedContent from './entities/messaging/content/DeletedContent';
 import { SSLConfig } from './utils/createCredentials';
 
 type Config = {
-  token: string,
-  endpoints: Array<string>,
-  ssl?: SSLConfig,
-  loggerOptions?: LoggerOptions
+  token: string;
+  endpoints: Array<string>;
+  ssl?: SSLConfig;
+  loggerOptions?: LoggerOptions;
 };
 
 class Bot {
@@ -43,10 +42,14 @@ class Bot {
   private subscriptions: Array<Subscription> = [];
 
   public readonly logger: Logger;
-  public readonly updateSubject: Subject<dialog.UpdateSeqUpdate> = new Subject();
+  public readonly updateSubject: Subject<
+    dialog.UpdateSeqUpdate
+  > = new Subject();
 
   constructor(config: Config) {
-    const endpoint = config.endpoints.map((url) => new URL(url)).find(() => true);
+    const endpoint = config.endpoints
+      .map((url) => new URL(url))
+      .find(() => true);
     if (!endpoint) {
       throw new Error('Endpoints misconfigured');
     }
@@ -56,7 +59,7 @@ class Bot {
     this.rpc = new Rpc({
       endpoint,
       ssl: config.ssl,
-      logger: this.logger
+      logger: this.logger,
     });
 
     this.ready = this.start(config.token);
@@ -72,12 +75,16 @@ class Bot {
   private async start(token: string) {
     const self = User.from(await this.rpc.authorize(token));
     const state = new State(self);
-    const dialogs = await this.applyEntities(state, await this.rpc.loadDialogs());
+    const dialogs = await this.applyEntities(
+      state,
+      await this.rpc.loadDialogs(),
+    );
     state.applyDialogs(dialogs);
 
     state.applyParameters(await this.rpc.getParameters());
 
-    const subscription = this.rpc.subscribeSeqUpdates()
+    const subscription = this.rpc
+      .subscribeSeqUpdates()
       .pipe(
         retry(),
         flatMap(async (update) => {
@@ -85,7 +92,7 @@ class Bot {
           if (missing.length) {
             const dialogs = await this.applyEntities(
               state,
-              await this.rpc.loadMissingPeers(missing)
+              await this.rpc.loadMissingPeers(missing),
             );
             state.applyDialogs(dialogs);
           }
@@ -93,7 +100,7 @@ class Bot {
           state.applyUpdate(update);
 
           return update;
-        })
+        }),
       )
       .subscribe(this.updateSubject);
 
@@ -102,7 +109,10 @@ class Bot {
     return state;
   }
 
-  private async applyEntities<T>(state: State, responseEntities: ResponseEntities<T>): Promise<T> {
+  private async applyEntities<T>(
+    state: State,
+    responseEntities: ResponseEntities<T>,
+  ): Promise<T> {
     const peerEntities = state.applyResponseEntities(responseEntities);
     const entities = await this.rpc.loadPeerEntities(peerEntities);
     state.applyEntities(entities);
@@ -138,28 +148,30 @@ class Bot {
    * Subscribes to messages stream.
    */
   public subscribeToMessages(): Observable<Message> {
-    return this.updateSubject
-      .pipe(flatMap((update) => {
+    return this.updateSubject.pipe(
+      flatMap((update) => {
         if (update.updateMessage) {
           return of(Message.from(update.updateMessage));
         }
 
         return EMPTY;
-      }));
+      }),
+    );
   }
 
   /**
    * Subscribes to messages stream.
    */
   public subscribeToActions(): Observable<ActionEvent> {
-    return this.updateSubject
-      .pipe(flatMap((update) => {
+    return this.updateSubject.pipe(
+      flatMap((update) => {
         if (update.updateInteractiveMediaEvent) {
           return of(ActionEvent.from(update.updateInteractiveMediaEvent));
         }
 
         return EMPTY;
-      }));
+      }),
+    );
   }
 
   /**
@@ -169,7 +181,7 @@ class Bot {
     peer: Peer,
     text: string,
     attachment?: null | MessageAttachment,
-    actionOrActions?: ActionGroup | ActionGroup[]
+    actionOrActions?: ActionGroup | ActionGroup[],
   ): Promise<UUID> {
     const state = await this.ready;
     const outPeer = state.createOutPeer(peer);
@@ -184,7 +196,7 @@ class Bot {
   public async editText(
     mid: UUID,
     text: string,
-    actionOrActions?: ActionGroup | ActionGroup[]
+    actionOrActions?: ActionGroup | ActionGroup[],
   ): Promise<void> {
     const content = TextContent.create(text, normalizeArray(actionOrActions));
 
@@ -204,7 +216,7 @@ class Bot {
   public async sendDocument(
     peer: Peer,
     fileName: string,
-    attachment?: MessageAttachment
+    attachment?: MessageAttachment,
   ): Promise<UUID> {
     const state = await this.ready;
     const outPeer = state.createOutPeer(peer);
@@ -217,7 +229,7 @@ class Bot {
       fileInfo.mime,
       null,
       FileLocation.from(fileLocation),
-      null
+      null,
     );
 
     return this.rpc.sendMessage(outPeer, content, attachment);
@@ -229,7 +241,7 @@ class Bot {
   public async sendImage(
     peer: Peer,
     fileName: string,
-    attachment?: MessageAttachment
+    attachment?: MessageAttachment,
   ): Promise<UUID> {
     const state = await this.ready;
     const outPeer = state.createOutPeer(peer);
@@ -243,7 +255,7 @@ class Bot {
       fileInfo.mime,
       preview,
       FileLocation.from(fileLocation),
-      extension
+      extension,
     );
 
     return this.rpc.sendMessage(outPeer, content, attachment);
@@ -259,10 +271,12 @@ class Bot {
   /**
    * Retrieves messages by message ids.
    */
-  public async fetchMessages(mids: Array<UUID>): Promise<Array<HistoryMessage>> {
+  public async fetchMessages(
+    mids: Array<UUID>,
+  ): Promise<Array<HistoryMessage>> {
     const messages = await this.applyEntities(
       await this.ready,
-      await this.rpc.fetchMessages(mids)
+      await this.rpc.fetchMessages(mids),
     );
 
     return messages.map(HistoryMessage.from);
@@ -275,7 +289,7 @@ class Bot {
     const state = await this.ready;
     const uids = await this.applyEntities(
       state,
-      await this.rpc.searchContacts(nick)
+      await this.rpc.searchContacts(nick),
     );
 
     const lowerNick = nick.toLowerCase();

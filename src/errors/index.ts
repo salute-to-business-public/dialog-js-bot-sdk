@@ -4,6 +4,4 @@
 
 import PeerNotFoundError from './PeerNotFoundError';
 
-export {
-  PeerNotFoundError
-};
+export { PeerNotFoundError };

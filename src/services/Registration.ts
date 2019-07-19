@@ -13,12 +13,12 @@ class Registration extends Service<any> {
 
   registerDevice(
     request: dialog.RequestRegisterDevice,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseDeviceRequest> {
     return this.service.registerDeviceAsync(
       request,
       metadata,
-      this.getCallOptions({ authRequired: false })
+      this.getCallOptions({ authRequired: false }),
     );
   }
 }

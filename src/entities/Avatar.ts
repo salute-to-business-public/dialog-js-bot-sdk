@@ -20,7 +20,7 @@ class Avatar {
     return new dialog.Avatar({
       fullImage: this.full ? this.full.toApi() : null,
       smallImage: this.small ? this.small.toApi() : null,
-      largeImage: this.large ? this.large.toApi() : null
+      largeImage: this.large ? this.large.toApi() : null,
     });
   }
 

@@ -11,16 +11,7 @@ import PeerMap from './PeerMap';
 import PeerType from './PeerType';
 import ActionEvent from './ActionEvent';
 
-export {
-  UUID,
-  Peer,
-  User,
-  Group,
-  OutPeer,
-  PeerMap,
-  PeerType,
-  ActionEvent
-};
+export { UUID, Peer, User, Group, OutPeer, PeerMap, PeerType, ActionEvent };
 
 export * from './files';
 export * from './messaging';

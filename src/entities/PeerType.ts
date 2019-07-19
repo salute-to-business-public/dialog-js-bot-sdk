@@ -8,7 +8,7 @@ enum PeerType {
   UNKNOWN = 'unknown',
   PRIVATE = 'private',
   GROUP = 'group',
-  SIP = 'sip'
+  SIP = 'sip',
 }
 
 export function peerTypeToApi(type: PeerType): dialog.PeerType {

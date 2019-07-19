@@ -20,7 +20,7 @@ enum GroupPermission {
   DELETE_MESSAGE,
   GET_INTEGRATION_TOKEN,
   SEND_MESSAGE,
-  PIN_MESSAGE
+  PIN_MESSAGE,
 }
 
 export default GroupPermission;

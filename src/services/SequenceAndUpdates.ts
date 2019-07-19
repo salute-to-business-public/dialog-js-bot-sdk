@@ -14,34 +14,44 @@ class SequenceAndUpdates extends Service<any> {
 
   public getState(
     request: dialog.RequestGetState,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseSeq> {
     return this.service.getStateAsync(request, metadata, this.getCallOptions());
   }
 
   public getDifference(
     request: dialog.RequestGetDifference,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseGetDifference> {
-    return this.service.getDifferenceAsync(request, metadata, this.getCallOptions());
+    return this.service.getDifferenceAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 
   public getReferencedEntities(
     request: dialog.RequestGetReferencedEntitites,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseGetReferencedEntitites> {
-    return this.service.getReferencedEntititesAsync(request, metadata, this.getCallOptions());
+    return this.service.getReferencedEntititesAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 
   public seqUpdates(
     request: google.protobuf.Empty,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Observable<dialog.SeqUpdateBox> {
     return Observable.create((emitter: Subscriber<dialog.SeqUpdateBox>) => {
-      const call: ClientReadableStream<dialog.SeqUpdateBox> = this.service.seqUpdates(
+      const call: ClientReadableStream<
+        dialog.SeqUpdateBox
+      > = this.service.seqUpdates(
         request,
         metadata,
-        this.getCallOptions({ deadline: Infinity })
+        this.getCallOptions({ deadline: Infinity }),
       );
 
       call.on('data', (update: dialog.SeqUpdateBox) => emitter.next(update));
@@ -53,7 +63,6 @@ class SequenceAndUpdates extends Service<any> {
       };
     });
   }
-
 }
 
 export default SequenceAndUpdates;

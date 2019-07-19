@@ -28,7 +28,10 @@ class State {
           return OutPeer.create(peer, user.accessHash);
         }
 
-        throw new PeerNotFoundError(peer, `User #${peer.id} unexpectedly not found`);
+        throw new PeerNotFoundError(
+          peer,
+          `User #${peer.id} unexpectedly not found`,
+        );
 
       case PeerType.GROUP:
         const group = this.groups.get(peer.id);
@@ -36,7 +39,10 @@ class State {
           return OutPeer.create(peer, group.accessHash);
         }
 
-        throw new PeerNotFoundError(peer, `Group #${peer.id} unexpectedly not found`);
+        throw new PeerNotFoundError(
+          peer,
+          `Group #${peer.id} unexpectedly not found`,
+        );
 
       default:
         throw new PeerNotFoundError(peer, `Unexpected peer type ${peer.type}`);
@@ -44,7 +50,9 @@ class State {
   }
 
   applyDialogs(dialogs: dialog.Dialog[]) {
-    const mapped = mapNotNull(dialogs, (dialog) => dialog.peer ? Peer.from(dialog.peer) : null);
+    const mapped = mapNotNull(dialogs, (dialog) =>
+      dialog.peer ? Peer.from(dialog.peer) : null,
+    );
     this.dialogs.push(...mapped);
   }
 
@@ -64,12 +72,17 @@ class State {
     });
   }
 
-  applyResponseEntities({ users, groups, userPeers, groupPeers }: ResponseEntities<any>): PeerEntities {
+  applyResponseEntities({
+    users,
+    groups,
+    userPeers,
+    groupPeers,
+  }: ResponseEntities<any>): PeerEntities {
     this.applyEntities({ users, groups });
 
     return {
       users: userPeers.filter((peer) => !this.users.has(peer.uid)),
-      groups: groupPeers.filter((peer) => !this.groups.has(peer.groupId))
+      groups: groupPeers.filter((peer) => !this.groups.has(peer.groupId)),
     };
   }
 
@@ -93,7 +106,10 @@ class State {
   checkEntities(update: dialog.UpdateSeqUpdate): Array<dialog.Peer> {
     const missingPeers: Array<dialog.Peer> = [];
     if (update.updateMessage) {
-      if (update.updateMessage.peer && !this.hasPeer(update.updateMessage.peer)) {
+      if (
+        update.updateMessage.peer &&
+        !this.hasPeer(update.updateMessage.peer)
+      ) {
         missingPeers.push(update.updateMessage.peer);
       }
     }

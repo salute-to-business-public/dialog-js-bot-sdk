@@ -11,9 +11,9 @@ const mime = require('mime/lite');
 const stat = promisify(fs.stat);
 
 export type FileInfo = {
-  name: string,
-  size: number,
-  mime: string
+  name: string;
+  size: number;
+  mime: string;
 };
 
 /**
@@ -27,7 +27,7 @@ async function getFileInfo(fileName: string): Promise<FileInfo> {
   return {
     name,
     size: stats.size,
-    mime: mime.getType(name)
+    mime: mime.getType(name),
   };
 }
 

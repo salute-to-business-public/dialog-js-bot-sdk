@@ -7,12 +7,13 @@ import { tap, flatMap } from 'rxjs/operators';
 import { testWithContext } from './test-utils';
 import context from './context';
 
-testWithContext('bot should be able manage parameters', context, async ({ bot1 }) => {
-  from(
-    bot1.setParameter('__test__', '__value__')
-  )
-    .pipe(
+testWithContext(
+  'bot should be able manage parameters',
+  context,
+  async ({ bot1 }) => {
+    from(bot1.setParameter('__test__', '__value__')).pipe(
       flatMap(() => bot1.getParameter('__test__')),
-      tap((value) => expect(value).toBe('__value__'))
+      tap((value) => expect(value).toBe('__value__')),
     );
-});
+  },
+);

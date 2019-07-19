@@ -35,7 +35,7 @@ class Group {
     this.title = api.title;
     this.avatar = api.avatar ? new Avatar(api.avatar) : null;
     this.memebers = new GroupMemberList({
-      count: getOpt(api.membersAmount, 0)
+      count: getOpt(api.membersAmount, 0),
     });
     this.createdAt = new Date(api.createDate.toInt());
     this.about = getOpt(api.about, null);

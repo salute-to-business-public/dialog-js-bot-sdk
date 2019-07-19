@@ -20,7 +20,7 @@ class User extends Record<User> {
       accessHash: api.accessHash,
       name: api.data ? api.data.name : 'unknown',
       isBot: api.data ? getOpt(api.data.isBot, false) : false,
-      nick: api.data ? getOpt(api.data.nick, null) : null 
+      nick: api.data ? getOpt(api.data.nick, null) : null,
     });
   }
 }

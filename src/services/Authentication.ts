@@ -13,12 +13,12 @@ class Authentication extends Service<any> {
 
   startTokenAuth(
     request: dialog.RequestStartTokenAuth,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseAuth> {
     return this.service.startTokenAuthAsync(
       request,
       metadata,
-      this.getCallOptions()
+      this.getCallOptions(),
     );
   }
 }

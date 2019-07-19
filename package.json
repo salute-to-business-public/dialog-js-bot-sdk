@@ -14,7 +14,8 @@
     "postversion": "npm run release",
     "prerelease": "npm run build",
     "release": "git push --follow-tags",
-    "postrelease": "npm publish"
+    "postrelease": "npm publish",
+    "format": "prettier --write */**/*.{ts,json,md}"
   },
   "author": "Nikita Gusakov <gusnkt@gmail.com>",
   "license": "Apache-2.0",
@@ -43,9 +44,12 @@
     "@types/uuid": "3.4.5",
     "buildbranch": "2.0.1",
     "dotenv": "8.0.0",
+    "husky": "3.0.1",
     "jest": "24.8.0",
     "jest-junit": "6.4.0",
+    "lint-staged": "9.2.0",
     "nodemon": "1.19.1",
+    "prettier": "1.18.2",
     "ts-jest": "24.0.2",
     "ts-node": "8.3.0",
     "typedoc": "0.14.2",
@@ -53,5 +57,21 @@
   },
   "gh-pages-deploy": {
     "staticpath": "docs"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "always",
+    "trailingComma": "all"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }

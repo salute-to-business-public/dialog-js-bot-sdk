@@ -27,15 +27,13 @@ const context = beforeAllWithContext(async () => {
     throw new Error('bot2 must have nickname');
   }
 
-  const bot2Peer = await bot1
-    .findUserByNick(bot2Self.nick)
-    .then((user) => {
-      if (user) {
-        return Peer.private(user.id);
-      }
+  const bot2Peer = await bot1.findUserByNick(bot2Self.nick).then((user) => {
+    if (user) {
+      return Peer.private(user.id);
+    }
 
-      throw new Error('bot1 not able to find bot2');
-    });
+    throw new Error('bot1 not able to find bot2');
+  });
 
   return { bot1, bot2, bot2Peer };
 });

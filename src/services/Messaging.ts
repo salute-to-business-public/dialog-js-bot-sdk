@@ -13,30 +13,46 @@ class Messaging extends Service<any> {
 
   fetchDialogIndex(
     request: dialog.RequestFetchDialogIndex,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseFetchDialogIndex> {
-    return this.service.fetchDialogIndexAsync(request, metadata, this.getCallOptions());
+    return this.service.fetchDialogIndexAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 
   loadDialogs(
     request: dialog.RequestLoadDialogs,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseLoadDialogs> {
-    return this.service.loadDialogsAsync(request, metadata, this.getCallOptions());
+    return this.service.loadDialogsAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 
   sendMessage(
     request: dialog.RequestSendMessage,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseSendMessage> {
-    return this.service.sendMessageAsync(request, metadata, this.getCallOptions());
+    return this.service.sendMessageAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 
   updateMessage(
     request: dialog.RequestUpdateMessage,
-    metadata?: Metadata
+    metadata?: Metadata,
   ): Promise<dialog.ResponseSeqDate> {
-    return this.service.updateMessageAsync(request, metadata, this.getCallOptions());
+    return this.service.updateMessageAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
   }
 }
 

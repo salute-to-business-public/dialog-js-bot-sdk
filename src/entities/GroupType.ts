@@ -40,8 +40,7 @@ export class PublicGroupType extends GroupType {
   }
 }
 
-export class PrivateGroupType extends GroupType {
-}
+export class PrivateGroupType extends GroupType {}
 
 export class PublicChannelType extends GroupType {
   public readonly shortname: string;
@@ -52,8 +51,6 @@ export class PublicChannelType extends GroupType {
   }
 }
 
-export class PrivateChannelType extends GroupType {
-}
+export class PrivateChannelType extends GroupType {}
 
-export class UnknownGroupType extends GroupType {
-}
+export class UnknownGroupType extends GroupType {}

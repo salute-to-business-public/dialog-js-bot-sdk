@@ -4,7 +4,7 @@
 
 function mapNotNull<T, R>(
   collection: Array<T>,
-  mapper: (value: T) => R | null | undefined
+  mapper: (value: T) => R | null | undefined,
 ): Array<R> {
   const result: Array<R> = [];
   collection.forEach((value) => {
@@ -16,6 +16,5 @@ function mapNotNull<T, R>(
 
   return result;
 }
-
 
 export default mapNotNull;
