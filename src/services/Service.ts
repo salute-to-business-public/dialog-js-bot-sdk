@@ -37,8 +37,8 @@ abstract class Service<T extends Client> {
   private readonly noopCredentials: CallCredentials;
 
   protected constructor(ServiceImpl: T, config: Config) {
-    // @ts-ignore
     this.service = Bluebird.promisifyAll(
+      // @ts-ignore
       new ServiceImpl(config.endpoint, config.credentials, {
         interceptors: [createLogInterceptor(config.logger)],
       }),
