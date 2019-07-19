@@ -14,7 +14,12 @@ dotenv.config();
 async function run(token: string, endpoint: string) {
   const bot = new Bot({
     token,
-    endpoints: [endpoint]
+    endpoints: [endpoint],
+    loggerOptions: {
+      name: 'example-bot',
+      level: 'trace',
+      prettyPrint: true
+    }
   });
 
   const self = await bot.getSelf();

@@ -2,46 +2,42 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import Bluebird from 'bluebird';
 import fetch from 'node-fetch';
-import { ChannelCredentials, Metadata, ClientReadableStream } from 'grpc';
-import { dialog, google } from '@dlghq/dialog-api';
-import { Observable, Subscriber } from 'rxjs';
+import { Metadata } from 'grpc';
+import { dialog } from '@dlghq/dialog-api';
+import Service, { Config } from './Service';
 
-class MediaAndFiles {
-  private readonly service: any;
-
-  constructor(endpoint: string, credentials: ChannelCredentials) {
-    // @ts-ignore
-    this.service = Bluebird.promisifyAll(new dialog.MediaAndFiles(endpoint, credentials));
+class MediaAndFiles extends Service<any> {
+  constructor(config: Config) {
+    super(dialog.MediaAndFiles, config);
   }
 
   public getFileUrls(
     request: dialog.RequestGetFileUrls,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseGetFileUrls> {
-    return this.service.getFileUrlsAsync(request, metadata);
+    return this.service.getFileUrlsAsync(request, metadata, this.getCallOptions());
   }
 
   public getFileUploadUrl(
     request: dialog.RequestGetFileUploadUrl,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseGetFileUploadUrl> {
-    return this.service.getFileUploadUrlAsync(request, metadata);
+    return this.service.getFileUploadUrlAsync(request, metadata, this.getCallOptions());
   }
 
   public getFileUploadPartUrl(
     request: dialog.RequestGetFileUploadPartUrl,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseGetFileUploadPartUrl> {
-    return this.service.getFileUploadPartUrlAsync(request, metadata);
+    return this.service.getFileUploadPartUrlAsync(request, metadata, this.getCallOptions());
   }
 
   public commitFileUpload(
     request: dialog.RequestCommitFileUpload,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseCommitFileUpload> {
-    return this.service.commitFileUploadAsync(request, metadata);
+    return this.service.commitFileUploadAsync(request, metadata, this.getCallOptions());
   }
 
   public async uploadChunk(url: string, content: Buffer): Promise<void> {

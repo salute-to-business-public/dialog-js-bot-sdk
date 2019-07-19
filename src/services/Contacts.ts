@@ -2,23 +2,20 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import Bluebird from 'bluebird';
-import { ChannelCredentials, Metadata } from 'grpc';
+import { Metadata } from 'grpc';
 import { dialog } from '@dlghq/dialog-api';
+import Service, { Config } from './Service';
 
-class Contacts {
-  private readonly service: any;
-
-  constructor(endpoint: string, credentials: ChannelCredentials) {
-    // @ts-ignore
-    this.service = Bluebird.promisifyAll(new dialog.Contacts(endpoint, credentials));
+class Contacts extends Service<any> {
+  constructor(config: Config) {
+    super(dialog.Contacts, config);
   }
 
   searchContacts(
     request: dialog.RequestSearchContacts,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseSearchContacts> {
-    return this.service.searchContactsAsync(request, metadata);
+    return this.service.searchContactsAsync(request, metadata, this.getCallOptions());
   }
 }
 

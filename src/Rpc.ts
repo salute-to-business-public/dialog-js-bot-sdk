@@ -4,6 +4,7 @@
 
 import fs from 'fs';
 import _ from 'lodash';
+import { Logger } from 'pino';
 import Bluebird from 'bluebird';
 import { Metadata } from 'grpc';
 import { dialog, google } from '@dlghq/dialog-api';
@@ -21,15 +22,25 @@ import { FileInfo } from './utils/getFileInfo';
 import randomLong from './utils/randomLong';
 import fromReadStream from './utils/fromReadStream';
 import UUID from './entities/UUID';
-import Message from './entities/messaging/Message';
 
 const pkg = require('../package.json');
+
+type Config = {
+  ssl?: SSLConfig,
+  logger: Logger,
+  endpoint: URL
+};
 
 class Rpc extends Services {
   private metadata: null | Promise<Metadata> = null;
 
-  constructor(endpoint: URL, ssl: SSLConfig | void) {
-    super(endpoint, createCredentials(endpoint, ssl));
+  constructor({ ssl, logger, endpoint }: Config) {
+    super({
+      logger,
+      endpoint: endpoint.host,
+      credentials: createCredentials(endpoint, ssl),
+      generateMetadata: () => this.getMetadata()
+    });
   }
 
   async getMetadata() {
@@ -60,8 +71,7 @@ class Rpc extends Services {
         appId: 1,
         timeZone: google.protobuf.StringValue.create({ value: 'UTC' }),
         preferredLanguages: ['en']
-      }),
-      await this.getMetadata()
+      })
     );
 
     if (!res.user) {
@@ -74,7 +84,6 @@ class Rpc extends Services {
   async loadMissingPeers(peers: Array<dialog.Peer>): Promise<ResponseEntities<dialog.Dialog[]>> {
     const { dialogs: payload, users, groups, userPeers, groupPeers } = await this.messaging.loadDialogs(
       dialog.RequestLoadDialogs.create({ peersToLoad: peers }),
-      await this.getMetadata()
     );
 
     return { payload, users, groups, userPeers, groupPeers };
@@ -83,7 +92,6 @@ class Rpc extends Services {
   async loadDialogs(): Promise<ResponseEntities<dialog.Dialog[]>> {
     const { dialogIndices } = await this.messaging.fetchDialogIndex(
       dialog.RequestFetchDialogIndex.create(),
-      await this.getMetadata()
     );
 
     const peers = mapNotNull(dialogIndices, (index) => index.peer);
@@ -91,7 +99,6 @@ class Rpc extends Services {
     const responses = await Bluebird.mapSeries(_.chunk(peers, 10), async (peersToLoad) => {
       return this.messaging.loadDialogs(
         dialog.RequestLoadDialogs.create({ peersToLoad }),
-        await this.getMetadata()
       );
     });
 
@@ -121,18 +128,15 @@ class Rpc extends Services {
   async loadPeerEntities(entities: PeerEntities): Promise<Entities> {
     return this.sequenceAndUpdates.getReferencedEntities(
       dialog.RequestGetReferencedEntitites.create(entities),
-      await this.getMetadata()
     );
   }
 
   private async getInitialState() {
-    const metadata = await this.getMetadata();
     const { seq, state } = await this.sequenceAndUpdates.getState(
-      dialog.RequestGetState.create(),
-      metadata
+      dialog.RequestGetState.create()
     );
 
-    return { metadata, seq, state };
+    return { seq, state };
   }
 
   // private async getDifference(seq: number, state: Uint8Array, metadata: Metadata) {
@@ -172,17 +176,16 @@ class Rpc extends Services {
 
   subscribeSeqUpdates(): Observable<dialog.UpdateSeqUpdate> {
     return from(this.getInitialState())
-      .pipe(flatMap(({ metadata }) => this.sequenceAndUpdates.seqUpdates(
-        google.protobuf.Empty.create(),
-        metadata
-      )))
-      .pipe(map(({ unboxedUpdate }) => {
-        if (unboxedUpdate) {
-          return unboxedUpdate;
-        }
+      .pipe(
+        flatMap(() => this.sequenceAndUpdates.seqUpdates(google.protobuf.Empty.create())),
+        map(({ unboxedUpdate }) => {
+          if (unboxedUpdate) {
+            return unboxedUpdate;
+          }
 
-        throw new Error('Unexpected behaviour');
-      }));
+          throw new Error('Unexpected behaviour');
+        })
+      );
   }
 
   async sendMessage(
@@ -199,8 +202,7 @@ class Rpc extends Services {
         message: contentToApi(content),
         reply: attachment ? attachment.toReplyApi() : null,
         forward: attachment ? attachment.toForwardApi() : null
-      }),
-      await this.getMetadata()
+      })
     );
 
     if (!res.messageId) {
@@ -215,16 +217,13 @@ class Rpc extends Services {
       dialog.RequestUpdateMessage.create({
         mid: mid.toApi(),
         updatedMessage: contentToApi(content)
-      }),
-      await this.getMetadata()
+      })
     );
   }
 
   async uploadFile(fileName: string, fileInfo: FileInfo, maxChunkSize: number = 1024 * 1024) {
-    const metadata = await this.getMetadata();
     const { uploadKey } = await this.mediaAndFiles.getFileUploadUrl(
-      dialog.RequestGetFileUploadUrl.create({ expectedSize: fileInfo.size }),
-      metadata
+      dialog.RequestGetFileUploadUrl.create({ expectedSize: fileInfo.size })
     );
 
     let partNumber = 0;
@@ -237,8 +236,7 @@ class Rpc extends Services {
             uploadKey,
             partSize: chunk.length,
             partNumber: partNumber++
-          }),
-          metadata
+          })
         );
 
         await this.mediaAndFiles.uploadChunk(url, chunk);
@@ -246,8 +244,7 @@ class Rpc extends Services {
       .pipe(last())
       .pipe(flatMap(async () => {
         const { uploadedFileLocation } = await this.mediaAndFiles.commitFileUpload(
-          dialog.RequestCommitFileUpload.create({ uploadKey, fileName: fileInfo.name }),
-          metadata
+          dialog.RequestCommitFileUpload.create({ uploadKey, fileName: fileInfo.name })
         );
 
         if (!uploadedFileLocation) {
@@ -263,8 +260,7 @@ class Rpc extends Services {
 
   async fetchFileUrl(fileLocation: FileLocation): Promise<string> {
     const { fileUrls } = await this.mediaAndFiles.getFileUrls(
-      dialog.RequestGetFileUrls.create({ files: [fileLocation.toApi()] }),
-      await this.getMetadata()
+      dialog.RequestGetFileUrls.create({ files: [fileLocation.toApi()] })
     );
 
     const url = _.head(fileUrls);
@@ -277,8 +273,7 @@ class Rpc extends Services {
 
   async fetchMessages(mids: Array<UUID>): Promise<ResponseEntities<dialog.HistoryMessage[]>> {
     const entities = await this.sequenceAndUpdates.getReferencedEntities(
-      dialog.RequestGetReferencedEntitites.create({ mids: mids.map((mid) => mid.toApi()) }),
-      await this.getMetadata()
+      dialog.RequestGetReferencedEntitites.create({ mids: mids.map((mid) => mid.toApi()) })
     );
 
     return {
@@ -292,8 +287,7 @@ class Rpc extends Services {
 
   async searchContacts(nick: string): Promise<ResponseEntities<Array<number>>> {
     const res = await this.contacts.searchContacts(
-      dialog.RequestSearchContacts.create({ request: nick }),
-      await this.getMetadata()
+      dialog.RequestSearchContacts.create({ request: nick })
     );
 
     return {
@@ -310,8 +304,7 @@ class Rpc extends Services {
 
   async getParameters(): Promise<Map<string, string>> {
     const res = await this.parameters.getParameters(
-      dialog.RequestGetParameters.create(),
-      await this.getMetadata()
+      dialog.RequestGetParameters.create()
     );
 
     const parameters = new Map();
@@ -325,8 +318,7 @@ class Rpc extends Services {
       dialog.RequestEditParameter.create({
         key,
         value: google.protobuf.StringValue.create({ value })
-      }),
-      await this.getMetadata()
+      })
     );
   }
 }

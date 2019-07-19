@@ -2,7 +2,7 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import { ChannelCredentials } from 'grpc';
+import { Config } from './Service';
 import Contacts from './Contacts';
 import Messaging from './Messaging';
 import Parameters from './Parameters';
@@ -10,7 +10,6 @@ import Registration from './Registration';
 import MediaAndFiles from './MediaAndFiles';
 import Authentication from './Authentication';
 import SequenceAndUpdates from './SequenceAndUpdates';
-
 class Services {
   public readonly contacts: Contacts;
   public readonly messaging: Messaging;
@@ -20,14 +19,24 @@ class Services {
   public readonly authentication: Authentication;
   public readonly sequenceAndUpdates: SequenceAndUpdates;
 
-  constructor({ host }: URL, credentials: ChannelCredentials) {
-    this.contacts = new Contacts(host, credentials);
-    this.messaging = new Messaging(host, credentials);
-    this.parameters = new Parameters(host, credentials);
-    this.registration = new Registration(host, credentials);
-    this.mediaAndFiles = new MediaAndFiles(host, credentials);
-    this.authentication = new Authentication(host, credentials);
-    this.sequenceAndUpdates = new SequenceAndUpdates(host, credentials);
+  constructor(config: Config) {
+    this.contacts = new Contacts(config);
+    this.messaging = new Messaging(config);
+    this.parameters = new Parameters(config);
+    this.registration = new Registration(config);
+    this.mediaAndFiles = new MediaAndFiles(config);
+    this.authentication = new Authentication(config);
+    this.sequenceAndUpdates = new SequenceAndUpdates(config);
+  }
+
+  public close() {
+    this.contacts.close();
+    this.messaging.close();
+    this.parameters.close();
+    this.registration.close();
+    this.mediaAndFiles.close();
+    this.authentication.close();
+    this.sequenceAndUpdates.close();
   }
 }
 

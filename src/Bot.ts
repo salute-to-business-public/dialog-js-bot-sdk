@@ -3,6 +3,7 @@
  */
 
 
+import pino, { Logger, LoggerOptions } from 'pino';
 import { Observable, Subject, of, EMPTY, Subscription } from 'rxjs';
 import { flatMap, retry } from 'rxjs/operators';
 import { dialog } from '@dlghq/dialog-api';
@@ -32,14 +33,17 @@ import { SSLConfig } from './utils/createCredentials';
 type Config = {
   token: string,
   endpoints: Array<string>,
-  ssl?: SSLConfig
+  ssl?: SSLConfig,
+  loggerOptions?: LoggerOptions
 };
 
 class Bot {
   private readonly rpc: Rpc;
   private readonly ready: Promise<State>;
-  public readonly updateSubject: Subject<dialog.UpdateSeqUpdate> = new Subject();
   private subscriptions: Array<Subscription> = [];
+
+  public readonly logger: Logger;
+  public readonly updateSubject: Subject<dialog.UpdateSeqUpdate> = new Subject();
 
   constructor(config: Config) {
     const endpoint = config.endpoints.map((url) => new URL(url)).find(() => true);
@@ -47,13 +51,22 @@ class Bot {
       throw new Error('Endpoints misconfigured');
     }
 
-    this.rpc = new Rpc(endpoint, config.ssl);
+    this.logger = pino(config.loggerOptions);
+
+    this.rpc = new Rpc({
+      endpoint,
+      ssl: config.ssl,
+      logger: this.logger
+    });
+
     this.ready = this.start(config.token);
   }
 
   public stop() {
     this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     this.subscriptions = [];
+
+    this.rpc.close();
   }
 
   private async start(token: string) {

@@ -2,48 +2,46 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import Bluebird from 'bluebird';
-import { ChannelCredentials, Metadata, ClientReadableStream } from 'grpc';
+import { Metadata, ClientReadableStream } from 'grpc';
 import { dialog, google } from '@dlghq/dialog-api';
 import { Observable, Subscriber } from 'rxjs';
+import Service, { Config } from './Service';
 
-class SequenceAndUpdates {
-  private readonly service: any;
-
-  constructor(endpoint: string, credentials: ChannelCredentials) {
-    // @ts-ignore
-    this.service = Bluebird.promisifyAll(new dialog.SequenceAndUpdates(endpoint, credentials));
+class SequenceAndUpdates extends Service<any> {
+  constructor(config: Config) {
+    super(dialog.SequenceAndUpdates, config);
   }
 
   public getState(
     request: dialog.RequestGetState,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseSeq> {
-    return this.service.getStateAsync(request, metadata);
+    return this.service.getStateAsync(request, metadata, this.getCallOptions());
   }
 
   public getDifference(
     request: dialog.RequestGetDifference,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseGetDifference> {
-    return this.service.getDifferenceAsync(request, metadata);
+    return this.service.getDifferenceAsync(request, metadata, this.getCallOptions());
   }
 
   public getReferencedEntities(
     request: dialog.RequestGetReferencedEntitites,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseGetReferencedEntitites> {
-    return this.service.getReferencedEntititesAsync(request, metadata);
+    return this.service.getReferencedEntititesAsync(request, metadata, this.getCallOptions());
   }
 
   public seqUpdates(
     request: google.protobuf.Empty,
-    metadata: Metadata
+    metadata?: Metadata
   ): Observable<dialog.SeqUpdateBox> {
     return Observable.create((emitter: Subscriber<dialog.SeqUpdateBox>) => {
       const call: ClientReadableStream<dialog.SeqUpdateBox> = this.service.seqUpdates(
         request,
-        metadata
+        metadata,
+        this.getCallOptions({ deadline: Infinity })
       );
 
       call.on('data', (update: dialog.SeqUpdateBox) => emitter.next(update));

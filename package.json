@@ -28,6 +28,8 @@
     "lodash": "4.17.14",
     "mime": "2.4.4",
     "node-fetch": "2.6.0",
+    "pino": "5.13.0",
+    "pino-pretty": "3.2.0",
     "rxjs": "6.5.2",
     "uuid": "3.3.2"
   },
@@ -37,6 +39,7 @@
     "@types/jest": "24.0.15",
     "@types/long": "4.0.0",
     "@types/node-fetch": "2.3.7",
+    "@types/pino": "5.8.8",
     "@types/uuid": "3.4.5",
     "buildbranch": "2.0.1",
     "dotenv": "8.0.0",

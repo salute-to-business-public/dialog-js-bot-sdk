@@ -2,44 +2,41 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import Bluebird from 'bluebird';
-import { ChannelCredentials, Metadata } from 'grpc';
+import { Metadata } from 'grpc';
 import { dialog } from '@dlghq/dialog-api';
+import Service, { Config } from './Service';
 
-class Messaging {
-  private readonly service: any;
-
-  constructor(endpoint: string, credentials: ChannelCredentials) {
-    // @ts-ignore
-    this.service = Bluebird.promisifyAll(new dialog.Messaging(endpoint, credentials));
+class Messaging extends Service<any> {
+  constructor(config: Config) {
+    super(dialog.Messaging, config);
   }
 
   fetchDialogIndex(
     request: dialog.RequestFetchDialogIndex,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseFetchDialogIndex> {
-    return this.service.fetchDialogIndexAsync(request, metadata);
+    return this.service.fetchDialogIndexAsync(request, metadata, this.getCallOptions());
   }
 
   loadDialogs(
     request: dialog.RequestLoadDialogs,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseLoadDialogs> {
-    return this.service.loadDialogsAsync(request, metadata);
+    return this.service.loadDialogsAsync(request, metadata, this.getCallOptions());
   }
 
   sendMessage(
     request: dialog.RequestSendMessage,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseSendMessage> {
-    return this.service.sendMessageAsync(request, metadata);
+    return this.service.sendMessageAsync(request, metadata, this.getCallOptions());
   }
 
   updateMessage(
     request: dialog.RequestUpdateMessage,
-    metadata: Metadata
+    metadata?: Metadata
   ): Promise<dialog.ResponseSeqDate> {
-    return this.service.updateMessageAsync(request, metadata);
+    return this.service.updateMessageAsync(request, metadata, this.getCallOptions());
   }
 }
 
