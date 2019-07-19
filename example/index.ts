@@ -22,11 +22,11 @@ async function run(token: string, endpoint: string) {
   });
 
   const self = await bot.getSelf();
-  console.log(`I've started, post me something @${self.nick}`);
+  bot.logger.info(`I've started, post me something @${self.nick}`);
 
   bot.updateSubject.subscribe({
     next(update) {
-      console.log(JSON.stringify({ update }, null, 2));
+      bot.logger.info(JSON.stringify({ update }, null, 2));
     },
   });
 
@@ -83,7 +83,7 @@ async function run(token: string, endpoint: string) {
   const actionsHandle = bot
     .subscribeToActions()
     .pipe(
-      flatMap(async (event) => console.log(JSON.stringify(event, null, 2))),
+      flatMap(async (event) => bot.logger.info(JSON.stringify(event, null, 2))),
     );
 
   await new Promise((resolve, reject) => {

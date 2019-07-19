@@ -4,12 +4,16 @@
 
 import { Metadata, ClientReadableStream } from 'grpc';
 import { dialog, google } from '@dlghq/dialog-api';
-import { Observable, Subscriber } from 'rxjs';
+import { Observable, Subscriber, from } from 'rxjs';
 import Service, { Config } from './Service';
+import { map, flatMap } from 'rxjs/operators';
 
 class SequenceAndUpdates extends Service<any> {
+  private readonly config: Config;
+
   constructor(config: Config) {
     super(dialog.SequenceAndUpdates, config);
+    this.config = config;
   }
 
   public getState(
@@ -43,25 +47,27 @@ class SequenceAndUpdates extends Service<any> {
 
   public seqUpdates(
     request: google.protobuf.Empty,
-    metadata?: Metadata,
   ): Observable<dialog.SeqUpdateBox> {
-    return Observable.create((emitter: Subscriber<dialog.SeqUpdateBox>) => {
-      const call: ClientReadableStream<
-        dialog.SeqUpdateBox
-      > = this.service.seqUpdates(
-        request,
-        metadata,
-        this.getCallOptions({ deadline: Infinity }),
-      );
+    return from(this.config.generateMetadata(this.config.endpoint)).pipe(
+      flatMap(
+        (metadata) =>
+          new Observable((emitter: Subscriber<dialog.SeqUpdateBox>) => {
+            const call: ClientReadableStream<
+              dialog.SeqUpdateBox
+            > = this.service.seqUpdates(request, metadata);
 
-      call.on('data', (update: dialog.SeqUpdateBox) => emitter.next(update));
-      call.on('end', () => emitter.complete());
-      call.on('error', (error) => emitter.error(error));
+            call.on('data', (update: dialog.SeqUpdateBox) =>
+              emitter.next(update),
+            );
+            call.on('end', () => emitter.complete());
+            call.on('error', (error) => emitter.error(error));
 
-      return () => {
-        call.cancel();
-      };
-    });
+            return () => {
+              call.cancel();
+            };
+          }),
+      ),
+    );
   }
 }
 

@@ -4,7 +4,8 @@
 
 import pino, { Logger, LoggerOptions } from 'pino';
 import { Observable, Subject, of, EMPTY, Subscription } from 'rxjs';
-import { flatMap, retry } from 'rxjs/operators';
+import { flatMap, tap } from 'rxjs/operators';
+import { retryBackoff } from 'backoff-rxjs';
 import { dialog } from '@dlghq/dialog-api';
 import Rpc from './Rpc';
 import {
@@ -86,7 +87,8 @@ class Bot {
     const subscription = this.rpc
       .subscribeSeqUpdates()
       .pipe(
-        retry(),
+        tap({ error: (error) => this.logger.error(error) }),
+        retryBackoff({ initialInterval: 100, maxInterval: 30 * 1000 }),
         flatMap(async (update) => {
           const missing = state.checkEntities(update);
           if (missing.length) {
