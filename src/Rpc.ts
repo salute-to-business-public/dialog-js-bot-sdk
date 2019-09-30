@@ -118,15 +118,13 @@ class Rpc extends Services {
   ): Promise<ResponseEntities<dialog.Dialog[]>> {
     const {
       dialogs: payload,
-      users,
-      groups,
       userPeers,
       groupPeers,
     } = await this.messaging.loadDialogs(
       dialog.RequestLoadDialogs.create({ peersToLoad: peers }),
     );
 
-    return { payload, users, groups, userPeers, groupPeers };
+    return { payload, userPeers, groupPeers };
   }
 
   async loadDialogs(): Promise<ResponseEntities<dialog.Dialog[]>> {
@@ -149,8 +147,6 @@ class Rpc extends Services {
       responses,
       new dialog.ResponseLoadDialogs(),
       (entities, res) => {
-        entities.users.push(...res.users);
-        entities.groups.push(...res.groups);
         entities.dialogs.push(...res.dialogs);
         entities.userPeers.push(...res.userPeers);
         entities.groupPeers.push(...res.groupPeers);
@@ -161,8 +157,6 @@ class Rpc extends Services {
 
     return {
       payload: entities.dialogs,
-      users: entities.users,
-      groups: entities.groups,
       userPeers: entities.userPeers,
       groupPeers: entities.groupPeers,
     };
@@ -354,12 +348,7 @@ class Rpc extends Services {
     );
 
     return {
-      payload: _.uniq([
-        ...res.users.map((u) => u.id),
-        ...res.userPeers.map((p) => p.uid),
-      ]),
-      users: res.users,
-      groups: [],
+      payload: res.userPeers.map((p) => p.uid),
       userPeers: res.userPeers,
       groupPeers: [],
     };

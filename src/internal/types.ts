@@ -16,8 +16,8 @@ export type PeerEntities = {
 
 export type ResponseEntities<T> = {
   payload: T;
-  users: dialog.User[];
-  groups: dialog.Group[];
+  users?: dialog.User[];
+  groups?: dialog.Group[];
   userPeers: dialog.UserOutPeer[];
   groupPeers: dialog.GroupOutPeer[];
 };

@@ -3,11 +3,10 @@
  */
 
 import { dialog } from '@dlghq/dialog-api';
-import Group = dialog.Group;
 import { getOpt } from './utils';
 
 export abstract class GroupType {
-  static from(api: Group) {
+  static from(api: dialog.GroupData) {
     const shortname = getOpt(api.shortname, null);
 
     switch (api.groupType) {

@@ -2,24 +2,31 @@
  * Copyright 2018 Dialog LLC <info@dlg.im>
  */
 
-import Long from 'long';
-import { dialog, google } from '@dlghq/dialog-api';
+import { dialog } from '@dlghq/dialog-api';
+import Clock from './Clock';
+import GroupMemberPermission, {
+  groupPermissionFromApi,
+} from './GroupMemberPermission';
+import { dateFromLong, dateFromTimestamp } from './utils';
 
 class GroupMember {
-  /** User id */
-  uid?: number | null;
+  public readonly clock: Clock;
+  public readonly userId: number;
+  public readonly invitedAt: Date;
+  public readonly deletedAt: Date | null;
+  public readonly permissions: Array<GroupMemberPermission>;
 
-  /** User inviter id */
-  inviterUid?: number | null;
+  public static from(api: dialog.Member) {
+    return new GroupMember(api);
+  }
 
-  /** Adding date */
-  date?: Long | null;
-
-  /** Member isAdmin */
-  isAdmin?: google.protobuf.BoolValue | null;
-
-  /** List of member permissions */
-  permissions?: dialog.GroupAdminPermission[] | null;
+  constructor(api: dialog.Member) {
+    this.clock = Clock.from(api.clock);
+    this.userId = api.uid;
+    this.invitedAt = dateFromLong(api.invitedAt);
+    this.deletedAt = api.deletedAt ? dateFromTimestamp(api.deletedAt) : null;
+    this.permissions = api.permissions.map(groupPermissionFromApi);
+  }
 }
 
 export default GroupMember;

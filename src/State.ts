@@ -78,7 +78,7 @@ class State {
     userPeers,
     groupPeers,
   }: ResponseEntities<any>): PeerEntities {
-    this.applyEntities({ users, groups });
+    this.applyEntities({ users: users || [], groups: groups || [] });
 
     return {
       users: userPeers.filter((peer) => !this.users.has(peer.uid)),
