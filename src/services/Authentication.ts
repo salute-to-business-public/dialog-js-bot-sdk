@@ -21,6 +21,28 @@ class Authentication extends Service<any> {
       this.getCallOptions(),
     );
   }
+
+  startUsernameAuth(
+    request: dialog.RequestStartUsernameAuth,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseStartUsernameAuth> {
+    return this.service.startUsernameAuth(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
+
+  validatePassword(
+    request: dialog.RequestValidatePassword,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseAuth> {
+    return this.service.validatePassword(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
 }
 
 export default Authentication;

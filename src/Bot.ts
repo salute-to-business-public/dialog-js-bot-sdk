@@ -7,7 +7,7 @@ import { Observable, Subject, of, EMPTY, Subscription } from 'rxjs';
 import { flatMap, tap } from 'rxjs/operators';
 import { retryBackoff } from 'backoff-rxjs';
 import { dialog } from '@dlghq/dialog-api';
-import Rpc from './Rpc';
+import Rpc, { Token } from './Rpc';
 import {
   UUID,
   Peer,
@@ -31,7 +31,7 @@ import DeletedContent from './entities/messaging/content/DeletedContent';
 import { SSLConfig } from './utils/createCredentials';
 
 type Config = {
-  token: string;
+  token: Token;
   endpoints: Array<string>;
   ssl?: SSLConfig;
   loggerOptions?: LoggerOptions;
@@ -73,7 +73,7 @@ class Bot {
     this.rpc.close();
   }
 
-  private async start(token: string) {
+  private async start(token: Token) {
     const self = User.from(await this.rpc.authorize(token));
     const state = new State(self);
     const dialogs = await this.applyEntities(

@@ -25,6 +25,13 @@ import UUID from './entities/UUID';
 
 const pkg = require('../package.json');
 
+type UserPassToken = {
+  username: string;
+  password: string;
+};
+
+export type Token = string | UserPassToken;
+
 type Config = {
   ssl?: SSLConfig;
   logger: Logger;
@@ -65,8 +72,20 @@ class Rpc extends Services {
     return this.metadata;
   }
 
-  async authorize(token: string) {
-    const res = await this.authentication.startTokenAuth(
+  async authorize(token: Token) {
+    const res = await (typeof token === 'string'
+      ? this.authorizeByToken(token)
+      : this.authorizeByUsernameAndPassword(token.username, token.password));
+
+    if (!res.user) {
+      throw new Error('Unexpected behaviour');
+    }
+
+    return res.user;
+  }
+
+  private authorizeByToken(token: string): Promise<dialog.ResponseAuth> {
+    return this.authentication.startTokenAuth(
       dialog.RequestStartTokenAuth.create({
         token,
         appId: 1,
@@ -74,12 +93,24 @@ class Rpc extends Services {
         preferredLanguages: ['en'],
       }),
     );
+  }
 
-    if (!res.user) {
-      throw new Error('Unexpected behaviour');
-    }
+  private async authorizeByUsernameAndPassword(
+    username: string,
+    password: string,
+  ): Promise<dialog.ResponseAuth> {
+    const { transactionHash } = await this.authentication.startUsernameAuth(
+      dialog.RequestStartUsernameAuth.create({
+        username: username,
+        appId: 1,
+        timeZone: google.protobuf.StringValue.create({ value: 'UTC' }),
+        preferredLanguages: ['en'],
+      }),
+    );
 
-    return res.user;
+    return this.authentication.validatePassword(
+      dialog.RequestValidatePassword.create({ password, transactionHash }),
+    );
   }
 
   async loadMissingPeers(
