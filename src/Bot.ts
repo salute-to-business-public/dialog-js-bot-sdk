@@ -13,6 +13,7 @@ import {
   Peer,
   User,
   Group,
+  GroupMemberList,
   ActionEvent,
   FileLocation,
   Message,
@@ -29,6 +30,7 @@ import createImagePreview from './utils/createImagePreview';
 import normalizeArray from './utils/normalizeArray';
 import DeletedContent from './entities/messaging/content/DeletedContent';
 import { SSLConfig } from './utils/createCredentials';
+import { PeerNotFoundError } from './errors';
 
 type Config = {
   token: Token;
@@ -144,6 +146,37 @@ class Bot {
   public async getGroup(gid: number): Promise<null | Group> {
     const state = await this.ready;
     return state.groups.get(gid) || null;
+  }
+
+  /**
+   * Returns existing dialogs.
+   */
+  public async getDialogs(): Promise<Array<Peer>> {
+    const state = await this.ready;
+    return state.dialogs;
+  }
+
+  /**
+   * Returns existing dialogs.
+   */
+  public async getGroupMembers(
+    groupId: number,
+  ): Promise<GroupMemberList | null> {
+    const state = await this.ready;
+    const groupMembers = state.groupMembers.get(groupId);
+    if (!groupMembers || !groupMembers.isLoaded) {
+      const group = await this.getGroup(groupId);
+      if (group) {
+        const members = await this.applyEntities(
+          state,
+          await this.rpc.loadGroupMembers(group.getGroupOutPeer()),
+        );
+
+        state.applyGroupMembers(groupId, members);
+      }
+    }
+
+    return state.groupMembers.get(groupId) || null;
   }
 
   /**

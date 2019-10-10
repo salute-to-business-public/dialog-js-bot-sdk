@@ -8,8 +8,8 @@ class PeerNotFoundError extends Error {
   readonly name = 'PeerNotFoundError';
   readonly peer: Peer;
 
-  constructor(peer: Peer, message: string) {
-    super(message);
+  constructor(peer: Peer) {
+    super(`${peer} unexpectedly not found`);
 
     this.peer = peer;
   }

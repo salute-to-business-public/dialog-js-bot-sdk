@@ -3,7 +3,16 @@
  */
 
 import { dialog } from '@dlghq/dialog-api';
-import { Group, OutPeer, Peer, User, PeerType } from './entities';
+import {
+  Group,
+  OutPeer,
+  Peer,
+  User,
+  PeerType,
+  GroupOutPeer,
+  GroupMember,
+  GroupMemberList,
+} from './entities';
 import { Entities, PeerEntities, ResponseEntities } from './internal/types';
 import mapNotNull from './utils/mapNotNull';
 import { PeerNotFoundError } from './errors';
@@ -13,6 +22,7 @@ class State {
   public readonly self: User;
   public readonly users: Map<number, User> = new Map();
   public readonly groups: Map<number, Group> = new Map();
+  public readonly groupMembers: Map<number, GroupMemberList> = new Map();
   public readonly dialogs: Array<Peer> = [];
   public readonly parameters: Map<string, string> = new Map();
 
@@ -27,26 +37,26 @@ class State {
         if (user) {
           return OutPeer.create(peer, user.accessHash);
         }
-
-        throw new PeerNotFoundError(
-          peer,
-          `User #${peer.id} unexpectedly not found`,
-        );
+        break;
 
       case PeerType.GROUP:
         const group = this.groups.get(peer.id);
         if (group) {
           return OutPeer.create(peer, group.accessHash);
         }
-
-        throw new PeerNotFoundError(
-          peer,
-          `Group #${peer.id} unexpectedly not found`,
-        );
-
-      default:
-        throw new PeerNotFoundError(peer, `Unexpected peer type ${peer.type}`);
+        break;
     }
+
+    throw new PeerNotFoundError(peer);
+  }
+
+  createGroupOutPeer(groupId: number): GroupOutPeer {
+    const group = this.groups.get(groupId);
+    if (group) {
+      return group.getGroupOutPeer();
+    }
+
+    throw new PeerNotFoundError(Peer.group(groupId));
   }
 
   applyDialogs(dialogs: dialog.Dialog[]) {
@@ -58,18 +68,22 @@ class State {
 
   applyEntities({ users, groups }: Entities) {
     users.forEach((apiUser) => {
-      if (!this.users.has(apiUser.id)) {
-        const user = User.from(apiUser);
-        this.users.set(user.id, user);
-      }
+      const user = User.from(apiUser);
+      this.users.set(user.id, user);
     });
 
     groups.forEach((apiGroup) => {
-      if (!this.groups.has(apiGroup.id)) {
-        const group = Group.from(apiGroup);
-        this.groups.set(group.id, group);
+      const group = Group.from(apiGroup);
+      this.groups.set(group.id, group);
+
+      if (!this.groupMembers.has(apiGroup.id)) {
+        this.groupMembers.set(apiGroup.id, GroupMemberList.from(apiGroup));
       }
     });
+  }
+
+  applyGroupMembers(groupId: number, members: Array<GroupMember>) {
+    this.groupMembers.set(groupId, GroupMemberList.create(members));
   }
 
   applyResponseEntities({
@@ -77,12 +91,21 @@ class State {
     groups,
     userPeers,
     groupPeers,
+    groupMembersSubset,
   }: ResponseEntities<any>): PeerEntities {
     this.applyEntities({ users: users || [], groups: groups || [] });
 
     return {
       users: userPeers.filter((peer) => !this.users.has(peer.uid)),
       groups: groupPeers.filter((peer) => !this.groups.has(peer.groupId)),
+      groupMembersSubset:
+        groupMembersSubset &&
+        dialog.GroupMembersSubset.create({
+          groupPeer: groupMembersSubset.groupPeer,
+          memberIds: groupMembersSubset.memberIds.filter(
+            (id) => !this.users.has(id),
+          ),
+        }),
     };
   }
 

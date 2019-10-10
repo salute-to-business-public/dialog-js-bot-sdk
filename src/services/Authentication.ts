@@ -26,7 +26,8 @@ class Authentication extends Service<any> {
     request: dialog.RequestStartUsernameAuth,
     metadata?: Metadata,
   ): Promise<dialog.ResponseStartUsernameAuth> {
-    return this.service.startUsernameAuth(
+    console.log({ request, metadata });
+    return this.service.startUsernameAuthAsync(
       request,
       metadata,
       this.getCallOptions(),
@@ -37,7 +38,7 @@ class Authentication extends Service<any> {
     request: dialog.RequestValidatePassword,
     metadata?: Metadata,
   ): Promise<dialog.ResponseAuth> {
-    return this.service.validatePassword(
+    return this.service.validatePasswordAsync(
       request,
       metadata,
       this.getCallOptions(),

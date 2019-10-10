@@ -6,22 +6,23 @@ import { dialog } from '@dlghq/dialog-api';
 import GroupMember from './GroupMember';
 
 class GroupMemberList {
-  public readonly count: number = 0;
   public readonly items: Array<GroupMember> = [];
   public readonly isLoaded: boolean = false;
 
   public static from(api: dialog.Group) {
-    return new GroupMemberList(api);
+    return new GroupMemberList(
+      api.selfMember ? [GroupMember.from(api.selfMember)] : [],
+      false,
+    );
   }
 
-  constructor(api: dialog.Group) {
-    if (api.data) {
-      this.count = api.data.membersAmount;
-    }
+  public static create(items: Array<GroupMember>) {
+    return new GroupMemberList(items, true);
+  }
 
-    if (api.selfMember) {
-      this.items.push(GroupMember.from(api.selfMember));
-    }
+  constructor(items: Array<GroupMember>, isLoaded: boolean) {
+    this.items = items;
+    this.isLoaded = isLoaded;
   }
 }
 

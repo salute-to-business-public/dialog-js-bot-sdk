@@ -15,13 +15,20 @@ import reduce from './utils/reduce';
 import { Entities, PeerEntities, ResponseEntities } from './internal/types';
 import { Observable, from } from 'rxjs';
 import { flatMap, last, map } from 'rxjs/operators';
-import { Content, OutPeer, FileLocation } from './entities';
+import {
+  Content,
+  OutPeer,
+  FileLocation,
+  GroupMember,
+  GroupOutPeer,
+} from './entities';
 import MessageAttachment from './entities/messaging/MessageAttachment';
-import { contentToApi, DocumentContent } from './entities/messaging/content';
+import { contentToApi } from './entities/messaging/content';
 import { FileInfo } from './utils/getFileInfo';
 import randomLong from './utils/randomLong';
 import fromReadStream from './utils/fromReadStream';
 import UUID from './entities/UUID';
+import { getOpt } from './entities/utils';
 
 const pkg = require('../package.json');
 
@@ -135,7 +142,7 @@ class Rpc extends Services {
     const peers = mapNotNull(dialogIndices, (index) => index.peer);
 
     const responses = await Bluebird.mapSeries(
-      _.chunk(peers, 10),
+      _.chunk(peers, 25),
       async (peersToLoad) => {
         return this.messaging.loadDialogs(
           dialog.RequestLoadDialogs.create({ peersToLoad }),
@@ -163,9 +170,53 @@ class Rpc extends Services {
   }
 
   async loadPeerEntities(entities: PeerEntities): Promise<Entities> {
+    if (
+      !entities.users.length &&
+      !entities.groups.length &&
+      (!entities.groupMembersSubset ||
+        !entities.groupMembersSubset.memberIds.length)
+    ) {
+      return {
+        users: [],
+        groups: [],
+      };
+    }
+
     return this.sequenceAndUpdates.getReferencedEntities(
       dialog.RequestGetReferencedEntitites.create(entities),
     );
+  }
+
+  async loadGroupMembers(
+    peer: GroupOutPeer,
+  ): Promise<ResponseEntities<Array<GroupMember>>> {
+    const payload: Array<GroupMember> = [];
+
+    let cursor: Uint8Array | null = null;
+    do {
+      const res: dialog.ResponseLoadMembers = await this.groups.loadMembers(
+        dialog.RequestLoadMembers.create({
+          group: peer.toApi(),
+          limit: 100,
+          next: google.protobuf.BytesValue.create({ value: cursor }),
+        }),
+      );
+
+      cursor = getOpt(res.cursor, null);
+      if (res.members) {
+        payload.push(...res.members.map(GroupMember.from));
+      }
+    } while (cursor !== null);
+
+    return {
+      payload,
+      userPeers: [],
+      groupPeers: [],
+      groupMembersSubset: dialog.GroupMembersSubset.create({
+        groupPeer: peer.toApi(),
+        memberIds: payload.map(({ userId }) => userId),
+      }),
+    };
   }
 
   private async getInitialState() {

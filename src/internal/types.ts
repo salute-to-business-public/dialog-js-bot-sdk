@@ -12,6 +12,7 @@ export type Entities = {
 export type PeerEntities = {
   users: dialog.UserOutPeer[];
   groups: dialog.GroupOutPeer[];
+  groupMembersSubset?: dialog.GroupMembersSubset;
 };
 
 export type ResponseEntities<T> = {
@@ -20,4 +21,5 @@ export type ResponseEntities<T> = {
   groups?: dialog.Group[];
   userPeers: dialog.UserOutPeer[];
   groupPeers: dialog.GroupOutPeer[];
+  groupMembersSubset?: dialog.GroupMembersSubset;
 };

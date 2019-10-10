@@ -3,6 +3,7 @@
  */
 
 import { Config } from './Service';
+import Groups from './Groups';
 import Contacts from './Contacts';
 import Messaging from './Messaging';
 import Parameters from './Parameters';
@@ -11,6 +12,7 @@ import MediaAndFiles from './MediaAndFiles';
 import Authentication from './Authentication';
 import SequenceAndUpdates from './SequenceAndUpdates';
 class Services {
+  public readonly groups: Groups;
   public readonly contacts: Contacts;
   public readonly messaging: Messaging;
   public readonly parameters: Parameters;
@@ -20,6 +22,7 @@ class Services {
   public readonly sequenceAndUpdates: SequenceAndUpdates;
 
   constructor(config: Config) {
+    this.groups = new Groups(config);
     this.contacts = new Contacts(config);
     this.messaging = new Messaging(config);
     this.parameters = new Parameters(config);
@@ -30,6 +33,7 @@ class Services {
   }
 
   public close() {
+    this.groups.close();
     this.contacts.close();
     this.messaging.close();
     this.parameters.close();
