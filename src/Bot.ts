@@ -22,15 +22,18 @@ import {
   TextContent,
   DocumentContent,
   MessageAttachment,
+  DeletedContent,
+  FullUser,
+  HistoryListMode,
+  GroupType,
+  PeerType,
 } from './entities';
 import State from './State';
 import { ResponseEntities } from './internal/types';
 import getFileInfo from './utils/getFileInfo';
 import createImagePreview from './utils/createImagePreview';
 import normalizeArray from './utils/normalizeArray';
-import DeletedContent from './entities/messaging/content/DeletedContent';
 import { SSLConfig } from './utils/createCredentials';
-import { PeerNotFoundError } from './errors';
 
 type Config = {
   token: Token;
@@ -141,6 +144,14 @@ class Bot {
   }
 
   /**
+   * Loads full user profile, if bot already seen this user before.
+   */
+  public async loadFullUser(userId: number): Promise<FullUser | null> {
+    const user = await this.getUser(userId);
+    return user ? this.rpc.loadFullUser(user.getUserOutPeer()) : null;
+  }
+
+  /**
    * Returns group by id, if bot already seen this group before.
    */
   public async getGroup(gid: number): Promise<null | Group> {
@@ -239,6 +250,15 @@ class Bot {
   }
 
   /**
+   * Reads all messages before `since`.
+   */
+  public async readMessages(peer: Peer, since: Message): Promise<void> {
+    const state = await this.ready;
+    const outPeer = state.createOutPeer(peer);
+    return this.rpc.readMessages(outPeer, since.date);
+  }
+
+  /**
    * Edits text message.
    */
   public async deleteMessage(mid: UUID): Promise<void> {
@@ -317,25 +337,20 @@ class Bot {
     return messages.map(HistoryMessage.from);
   }
 
-  /**
-   * Finds user by nick.
-   */
-  public async findUserByNick(nick: string): Promise<User | null> {
+  public async loadHistory(
+    peer: Peer,
+    since: Message | null = null,
+    limit = 10,
+    direction = HistoryListMode.BACKWARD,
+  ): Promise<Array<HistoryMessage>> {
     const state = await this.ready;
-    const uids = await this.applyEntities(
-      state,
-      await this.rpc.searchContacts(nick),
+    const outPeer = state.createOutPeer(peer);
+    return this.rpc.loadHistory(
+      outPeer,
+      since ? since.date : null,
+      direction,
+      limit,
     );
-
-    const lowerNick = nick.toLowerCase();
-    for (let id of uids) {
-      const user = state.users.get(id);
-      if (user && user.nick && lowerNick === user.nick.toLowerCase()) {
-        return user;
-      }
-    }
-
-    return null;
   }
 
   public async getParameter(key: string): Promise<string | null> {
@@ -350,6 +365,54 @@ class Bot {
     await this.rpc.editParameter(key, value);
 
     state.parameters.set(key, value);
+  }
+
+  /**
+   * Creates new group.
+   */
+  public async createGroup(title: string, type: GroupType): Promise<Group> {
+    const state = await this.ready;
+    const group = await this.applyEntities(
+      state,
+      await this.rpc.createGroup(title, type),
+    );
+
+    return group;
+  }
+
+  /**
+   * Finds peer by username or shortname.
+   */
+  public async findPeer(nickOrShortName: string): Promise<Peer | null> {
+    const state = await this.ready;
+    return this.applyEntities(
+      state,
+      await this.rpc.resolvePeer(nickOrShortName),
+    );
+  }
+
+  /**
+   * Finds group by shortname.
+   */
+  public async findUserByNick(nick: string): Promise<User | null> {
+    const peer = await this.findPeer(nick);
+    if (peer && peer.type === PeerType.PRIVATE) {
+      return this.getUser(peer.id);
+    }
+
+    return null;
+  }
+
+  /**
+   * Finds group by shortname.
+   */
+  public async findGroupByShortname(shortname: string): Promise<Group | null> {
+    const peer = await this.findPeer(shortname);
+    if (peer && peer.type === PeerType.GROUP) {
+      return this.getGroup(peer.id);
+    }
+
+    return null;
   }
 }
 

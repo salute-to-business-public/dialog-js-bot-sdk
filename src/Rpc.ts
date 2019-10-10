@@ -16,19 +16,28 @@ import { Entities, PeerEntities, ResponseEntities } from './internal/types';
 import { Observable, from } from 'rxjs';
 import { flatMap, last, map } from 'rxjs/operators';
 import {
+  UUID,
   Content,
   OutPeer,
+  UserOutPeer,
+  GroupOutPeer,
   FileLocation,
   GroupMember,
-  GroupOutPeer,
+  HistoryMessage,
+  Group,
+  MessageAttachment,
+  GroupType,
+  FullUser,
+  HistoryListMode,
+  Peer,
 } from './entities';
-import MessageAttachment from './entities/messaging/MessageAttachment';
 import { contentToApi } from './entities/messaging/content';
 import { FileInfo } from './utils/getFileInfo';
 import randomLong from './utils/randomLong';
 import fromReadStream from './utils/fromReadStream';
-import UUID from './entities/UUID';
-import { getOpt } from './entities/utils';
+import { getOpt, longFromDate } from './entities/utils';
+import { historyListModeToApi } from './entities/messaging/HistoryListMode';
+import { UnexpectedApiError } from './errors';
 
 const pkg = require('../package.json');
 
@@ -85,7 +94,7 @@ class Rpc extends Services {
       : this.authorizeByUsernameAndPassword(token.username, token.password));
 
     if (!res.user) {
-      throw new Error('Unexpected behaviour');
+      throw new UnexpectedApiError('user');
     }
 
     return res.user;
@@ -210,8 +219,6 @@ class Rpc extends Services {
 
     return {
       payload,
-      userPeers: [],
-      groupPeers: [],
       groupMembersSubset: dialog.GroupMembersSubset.create({
         groupPeer: peer.toApi(),
         memberIds: payload.map(({ userId }) => userId),
@@ -272,7 +279,7 @@ class Rpc extends Services {
           return unboxedUpdate;
         }
 
-        throw new Error('Unexpected behaviour');
+        throw new UnexpectedApiError('unboxedUpdate');
       }),
     );
   }
@@ -295,7 +302,7 @@ class Rpc extends Services {
     );
 
     if (!res.messageId) {
-      throw new Error('Unexpected behaviour');
+      throw new UnexpectedApiError('messageId');
     }
 
     return UUID.from(res.messageId);
@@ -306,6 +313,15 @@ class Rpc extends Services {
       dialog.RequestUpdateMessage.create({
         mid: mid.toApi(),
         updatedMessage: contentToApi(content),
+      }),
+    );
+  }
+
+  async readMessages(peer: OutPeer, since: Date) {
+    await this.messaging.readMessage(
+      dialog.RequestMessageRead.create({
+        peer: peer.toApi(),
+        date: longFromDate(since),
       }),
     );
   }
@@ -349,7 +365,7 @@ class Rpc extends Services {
           );
 
           if (!uploadedFileLocation) {
-            throw new Error('File unexpectedly failed');
+            throw new UnexpectedApiError('uploadedFileLocation');
           }
 
           return uploadedFileLocation;
@@ -370,9 +386,7 @@ class Rpc extends Services {
       return url.url;
     }
 
-    throw new Error(
-      `Unexpectedly failed to resolve file url for ${fileLocation.id}`,
-    );
+    throw new UnexpectedApiError('fileUrls');
   }
 
   async fetchMessages(
@@ -393,16 +407,46 @@ class Rpc extends Services {
     };
   }
 
-  async searchContacts(nick: string): Promise<ResponseEntities<Array<number>>> {
-    const res = await this.contacts.searchContacts(
-      dialog.RequestSearchContacts.create({ request: nick }),
+  async loadHistory(
+    peer: OutPeer,
+    since: Date | null,
+    direction: HistoryListMode,
+    limit: number,
+  ): Promise<Array<HistoryMessage>> {
+    const history = await this.messaging.loadHistory(
+      dialog.RequestLoadHistory.create({
+        peer: peer.toApi(),
+        date: longFromDate(since),
+        loadMode: historyListModeToApi(direction),
+        limit: limit,
+      }),
+    );
+    const result = history.history.map(HistoryMessage.from);
+
+    return result;
+  }
+
+  async resolvePeer(
+    nickOrShortName: string,
+  ): Promise<ResponseEntities<Peer | null>> {
+    const { peer } = await this.search.resolvePeer(
+      dialog.RequestResolvePeer.create({ shortname: nickOrShortName }),
     );
 
     return {
-      payload: res.userPeers.map((p) => p.uid),
-      userPeers: res.userPeers,
-      groupPeers: [],
+      payload: peer ? Peer.from(peer) : null,
+      peers: peer ? [peer] : undefined,
     };
+  }
+
+  async loadFullUser(peer: UserOutPeer): Promise<FullUser | null> {
+    const { fullUsers } = await this.users.loadFullUsers(
+      dialog.RequestLoadFullUsers.create({
+        userPeers: [peer.toApi()],
+      }),
+    );
+
+    return _.head(fullUsers.map(FullUser.from)) || null;
   }
 
   async getParameters(): Promise<Map<string, string>> {
@@ -423,6 +467,29 @@ class Rpc extends Services {
         value: google.protobuf.StringValue.create({ value }),
       }),
     );
+  }
+
+  async createGroup(
+    title: string,
+    type: GroupType,
+  ): Promise<ResponseEntities<Group>> {
+    const { type: groupType, shortname } = type.toApi();
+    const { group, userPeers } = await this.groups.createGroup(
+      dialog.RequestCreateGroup.create({
+        title,
+        groupType,
+        username: google.protobuf.StringValue.create({ value: shortname }),
+      }),
+    );
+
+    if (!group) {
+      throw new UnexpectedApiError('group');
+    }
+
+    return {
+      userPeers,
+      payload: Group.from(group),
+    };
   }
 }
 
