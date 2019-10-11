@@ -11,41 +11,46 @@ import parseDateFromLong from '../../utils/parseDateFromLong';
 
 class Message {
   /**
-   * Message id.
+   * The message id.
    */
   public readonly id: UUID;
 
   /**
-   * Peer of the chat which contains message.
+   * The peer of the chat which contains message.
    */
   public readonly peer: Peer;
 
   /**
-   * Message date.
+   * The message date.
    */
   public readonly date: Date;
 
   /**
-   * Message content.
+   * The message content.
    */
   public readonly content: Content;
 
   /**
-   * Message attachment.
+   * The message attachment.
    */
   public readonly attachment: null | MessageAttachment;
 
+  /**
+   * The id of the user who sent the message.
+   */
+  public readonly senderUserId: number;
+
   static from(api: dialog.UpdateMessage) {
     if (!api.mid) {
-      throw new Error('Message unexpectedly doesn\'t have id');
+      throw new Error("Message unexpectedly doesn't have id");
     }
 
     if (!api.peer) {
-      throw new Error('Message unexpectedly doesn\'t have peer');
+      throw new Error("Message unexpectedly doesn't have peer");
     }
 
     if (!api.message) {
-      throw new Error('Message unexpectedly doesn\'t have content');
+      throw new Error("Message unexpectedly doesn't have content");
     }
 
     return new Message(
@@ -53,7 +58,8 @@ class Message {
       Peer.from(api.peer),
       parseDateFromLong(api.date),
       apiToContent(api.message),
-      MessageAttachment.from(api.reply, api.forward)
+      MessageAttachment.from(api.reply, api.forward),
+      api.senderUid,
     );
   }
 
@@ -62,13 +68,15 @@ class Message {
     peer: Peer,
     date: Date,
     content: Content,
-    attachment: null | MessageAttachment
+    attachment: null | MessageAttachment,
+    senderUserId: number,
   ) {
     this.id = id;
     this.peer = peer;
     this.date = date;
     this.content = content;
     this.attachment = attachment;
+    this.senderUserId = senderUserId;
   }
 }
 

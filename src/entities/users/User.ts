@@ -7,6 +7,7 @@ import Record from 'dataclass';
 import { dialog } from '@dlghq/dialog-api';
 import { getOpt } from '../utils';
 import UserOutPeer from './UserOutPeer';
+import Peer from '../Peer';
 
 class User extends Record<User> {
   id: number = -1;
@@ -23,6 +24,10 @@ class User extends Record<User> {
       isBot: api.data ? getOpt(api.data.isBot, false) : false,
       nick: api.data ? getOpt(api.data.nick, null) : null,
     });
+  }
+
+  public getPeer() {
+    return Peer.private(this.id);
   }
 
   public getUserOutPeer() {

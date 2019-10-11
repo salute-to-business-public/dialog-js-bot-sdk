@@ -4,7 +4,13 @@
 
 import path from 'path';
 import dotenv from 'dotenv';
-import Bot, { MessageAttachment, ActionGroup, Action, Button } from '../src';
+import Bot, {
+  MessageAttachment,
+  ActionGroup,
+  Action,
+  Button,
+  GroupType,
+} from '../src';
 import { flatMap } from 'rxjs/operators';
 import { combineLatest, merge } from 'rxjs';
 
@@ -32,6 +38,12 @@ async function run(token: string, endpoint: string) {
 
   const messagesHandle = bot.subscribeToMessages().pipe(
     flatMap(async (message) => {
+      const author = await bot.forceGetUser(message.senderUserId);
+      if (author.isBot) {
+        // ignore other bots
+        return;
+      }
+
       if (message.content.type === 'text') {
         switch (message.content.text) {
           case 'octocat':
@@ -49,6 +61,34 @@ async function run(token: string, endpoint: string) {
               __filename,
               MessageAttachment.reply(message.id),
             );
+            break;
+
+          case 'group':
+            const group = await bot.createGroup(
+              'Test Group',
+              GroupType.privateGroup(),
+            );
+            await bot.inviteGroupMember(
+              group,
+              await bot.forceGetUser(message.senderUserId),
+            );
+            const securityBot = await bot.findUserByNick('security');
+            if (securityBot) {
+              await bot.inviteGroupMember(group, securityBot);
+              await bot.sendText(
+                group.getPeer(),
+                `@security I've invited you and I will kick you!`,
+              );
+              await bot.kickGroupMember(group, securityBot);
+            }
+
+            await bot.sendText(
+              group.getPeer(),
+              `Invite everyone to this group: ${await bot.fetchGroupInviteUrl(
+                group,
+              )}`,
+            );
+
             break;
 
           case 'delete':

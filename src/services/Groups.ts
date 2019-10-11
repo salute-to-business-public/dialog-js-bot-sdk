@@ -32,6 +32,79 @@ class Groups extends Service<any> {
       this.getCallOptions(),
     );
   }
+
+  editGroupTitle(
+    request: dialog.RequestEditGroupTitle,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseSeqDateMid> {
+    return this.service.editGroupTitleAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
+
+  editGroupAbout(
+    request: dialog.RequestEditGroupAbout,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseSeqDate> {
+    return this.service.editGroupAboutAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
+
+  inviteUser(
+    request: dialog.RequestInviteUser,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseSeqDateMid> {
+    return this.service.inviteUserAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
+
+  leaveGroup(
+    request: dialog.RequestLeaveGroup,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseSeqDateMid> {
+    return this.service.leaveGroupAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
+
+  kickUser(
+    request: dialog.RequestKickUser,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseSeqDateMid> {
+    return this.service.kickUserAsync(request, metadata, this.getCallOptions());
+  }
+
+  getGroupInviteUrl(
+    request: dialog.RequestGetGroupInviteUrl,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseInviteUrl> {
+    return this.service.getGroupInviteUrlAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
+
+  joinGroup(
+    request: dialog.RequestJoinGroup,
+    metadata?: Metadata,
+  ): Promise<dialog.ResponseJoinGroup> {
+    return this.service.joinGroupAsync(
+      request,
+      metadata,
+      this.getCallOptions(),
+    );
+  }
 }
 
 export default Groups;

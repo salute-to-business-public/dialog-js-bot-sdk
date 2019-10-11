@@ -207,7 +207,9 @@ class Rpc extends Services {
         dialog.RequestLoadMembers.create({
           group: peer.toApi(),
           limit: 100,
-          next: google.protobuf.BytesValue.create({ value: cursor }),
+          next: cursor
+            ? google.protobuf.BytesValue.create({ value: cursor })
+            : null,
         }),
       );
 
@@ -478,7 +480,9 @@ class Rpc extends Services {
       dialog.RequestCreateGroup.create({
         title,
         groupType,
-        username: google.protobuf.StringValue.create({ value: shortname }),
+        username: shortname
+          ? google.protobuf.StringValue.create({ value: shortname })
+          : null,
       }),
     );
 
@@ -488,6 +492,88 @@ class Rpc extends Services {
 
     return {
       userPeers,
+      groups: [group],
+      payload: Group.from(group),
+    };
+  }
+
+  async leaveGroup(group: GroupOutPeer): Promise<void> {
+    await this.groups.leaveGroup(
+      dialog.RequestLeaveGroup.create({
+        rid: await randomLong(),
+        groupPeer: group.toApi(),
+      }),
+    );
+  }
+
+  async editGroupTitle(peer: GroupOutPeer, title: string): Promise<void> {
+    await this.groups.editGroupTitle(
+      dialog.RequestEditGroupTitle.create({
+        title,
+        rid: await randomLong(),
+        groupPeer: peer.toApi(),
+      }),
+    );
+  }
+
+  async editGroupAbout(
+    peer: GroupOutPeer,
+    about: string | null,
+  ): Promise<void> {
+    await this.groups.editGroupAbout(
+      dialog.RequestEditGroupAbout.create({
+        rid: await randomLong(),
+        about: about
+          ? google.protobuf.StringValue.create({ value: about })
+          : null,
+        groupPeer: peer.toApi(),
+      }),
+    );
+  }
+
+  async inviteGroupMember(
+    group: GroupOutPeer,
+    user: UserOutPeer,
+  ): Promise<void> {
+    await this.groups.inviteUser(
+      dialog.RequestInviteUser.create({
+        rid: await randomLong(),
+        groupPeer: group.toApi(),
+        user: user.toApi(),
+      }),
+    );
+  }
+
+  async kickGroupMember(group: GroupOutPeer, user: UserOutPeer): Promise<void> {
+    await this.groups.kickUser(
+      dialog.RequestKickUser.create({
+        rid: await randomLong(),
+        groupPeer: group.toApi(),
+        user: user.toApi(),
+      }),
+    );
+  }
+
+  async getGroupInviteUrl(group: GroupOutPeer): Promise<string> {
+    const { url } = await this.groups.getGroupInviteUrl(
+      dialog.RequestGetGroupInviteUrl.create({ groupPeer: group.toApi() }),
+    );
+
+    return url;
+  }
+
+  async joinGroupByToken(token: string): Promise<ResponseEntities<Group>> {
+    const { group, userPeers } = await this.groups.joinGroup(
+      dialog.RequestJoinGroup.create({ token }),
+    );
+
+    if (!group) {
+      throw new UnexpectedApiError('group');
+    }
+
+    return {
+      userPeers,
+      groups: [group],
       payload: Group.from(group),
     };
   }

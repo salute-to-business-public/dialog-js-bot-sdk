@@ -6,6 +6,22 @@ import { dialog } from '@dlghq/dialog-api';
 import { getOpt } from '../utils';
 
 export abstract class GroupType {
+  static privateGroup() {
+    return new PrivateGroupType();
+  }
+
+  static publicGroup(shortname: string) {
+    return new PublicGroupType(shortname);
+  }
+
+  static privateChannel() {
+    return new PrivateChannelType();
+  }
+
+  static publicChannel(shortname: string) {
+    return new PublicChannelType(shortname);
+  }
+
   static from(api: dialog.GroupData) {
     const shortname = getOpt(api.shortname, null);
 

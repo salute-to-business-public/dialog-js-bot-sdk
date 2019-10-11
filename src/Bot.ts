@@ -27,6 +27,7 @@ import {
   HistoryListMode,
   GroupType,
   PeerType,
+  GroupMember,
 } from './entities';
 import State from './State';
 import { ResponseEntities } from './internal/types';
@@ -34,6 +35,7 @@ import getFileInfo from './utils/getFileInfo';
 import createImagePreview from './utils/createImagePreview';
 import normalizeArray from './utils/normalizeArray';
 import { SSLConfig } from './utils/createCredentials';
+import { PeerNotFoundError } from './errors';
 
 type Config = {
   token: Token;
@@ -137,10 +139,24 @@ class Bot {
 
   /**
    * Returns user by id, if bot already seen this user before.
+   * Returns null if user not found.
    */
-  public async getUser(uid: number): Promise<null | User> {
+  public async getUser(userId: number): Promise<null | User> {
     const state = await this.ready;
-    return state.users.get(uid) || null;
+    return state.users.get(userId) || null;
+  }
+
+  /**
+   * Returns user by id, if bot already seen this user before.
+   * Throws PeerNotFoundError if user not found.
+   */
+  public async forceGetUser(userId: number): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new PeerNotFoundError(Peer.private(userId));
+    }
+
+    return user;
   }
 
   /**
@@ -153,10 +169,24 @@ class Bot {
 
   /**
    * Returns group by id, if bot already seen this group before.
+   * Returns null if group not found.
    */
   public async getGroup(gid: number): Promise<null | Group> {
     const state = await this.ready;
     return state.groups.get(gid) || null;
+  }
+
+  /**
+   * Returns group by id, if bot already seen this group before.
+   * Throws PeerNotFoundError if group not found.
+   */
+  public async forceGetGroup(groupId: number): Promise<Group> {
+    const group = await this.getGroup(groupId);
+    if (!group) {
+      throw new PeerNotFoundError(Peer.group(groupId));
+    }
+
+    return group;
   }
 
   /**
@@ -337,6 +367,9 @@ class Bot {
     return messages.map(HistoryMessage.from);
   }
 
+  /**
+   * Loads chat history.
+   */
   public async loadHistory(
     peer: Peer,
     since: Message | null = null,
@@ -353,12 +386,18 @@ class Bot {
     );
   }
 
+  /**
+   * Returns the parameter from key-value synced with the server.
+   */
   public async getParameter(key: string): Promise<string | null> {
     const state = await this.ready;
 
     return state.parameters.get(key) || null;
   }
 
+  /**
+   * Sets the parameter from key-value synced with the server.
+   */
   public async setParameter(key: string, value: string): Promise<void> {
     const state = await this.ready;
 
@@ -368,7 +407,7 @@ class Bot {
   }
 
   /**
-   * Creates new group.
+   * Creates new group or channel.
    */
   public async createGroup(title: string, type: GroupType): Promise<Group> {
     const state = await this.ready;
@@ -378,6 +417,67 @@ class Bot {
     );
 
     return group;
+  }
+
+  /**
+   * Leaves the group.
+   */
+  public async leaveGroup(group: Group): Promise<void> {
+    await this.rpc.leaveGroup(group.getGroupOutPeer());
+  }
+
+  /**
+   * Edits a group title.
+   */
+  public async editGroupTitle(group: Group, title: string): Promise<void> {
+    await this.rpc.editGroupTitle(group.getGroupOutPeer(), title);
+  }
+
+  /**
+   * Edits a group about (description).
+   */
+  public async editGroupAbout(
+    group: Group,
+    about: string | null,
+  ): Promise<void> {
+    await this.rpc.editGroupAbout(group.getGroupOutPeer(), about);
+  }
+
+  /**
+   * Invites a user to the group.
+   */
+  public async inviteGroupMember(group: Group, user: User): Promise<void> {
+    await this.rpc.inviteGroupMember(
+      group.getGroupOutPeer(),
+      user.getUserOutPeer(),
+    );
+  }
+
+  /**
+   * Kicks the member from the group.
+   */
+  public async kickGroupMember(group: Group, user: User): Promise<void> {
+    await this.rpc.kickGroupMember(
+      group.getGroupOutPeer(),
+      user.getUserOutPeer(),
+    );
+  }
+
+  /**
+   * Fetches the group invite URL.
+   */
+  public async fetchGroupInviteUrl(group: Group): Promise<string> {
+    return this.rpc.getGroupInviteUrl(group.getGroupOutPeer());
+  }
+
+  /**
+   * Joins the group by invite token.
+   */
+  public async joinGroupByToken(token: string): Promise<Group> {
+    return this.applyEntities(
+      await this.ready,
+      await this.rpc.joinGroupByToken(token),
+    );
   }
 
   /**

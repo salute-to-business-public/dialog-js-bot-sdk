@@ -6,6 +6,7 @@ import Long from 'long';
 import { dialog } from '@dlghq/dialog-api';
 import GroupData from './GroupData';
 import GroupOutPeer from './GroupOutPeer';
+import Peer from '../Peer';
 
 class Group {
   public readonly id: number;
@@ -24,6 +25,10 @@ class Group {
     this.id = id;
     this.data = data;
     this.accessHash = accessHash;
+  }
+
+  public getPeer() {
+    return Peer.group(this.id);
   }
 
   public getGroupOutPeer() {
