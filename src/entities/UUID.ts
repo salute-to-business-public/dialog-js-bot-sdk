@@ -29,6 +29,10 @@ class UUID {
     });
   }
 
+  public equals(id: UUID) {
+    return this.msb.equals(id.msb) && this.lsb.equals(id.lsb);
+  }
+
   public toString() {
     return bytesToUuid([...this.msb.toBytes(), ...this.lsb.toBytes()]);
   }

@@ -3,8 +3,15 @@
  */
 
 import pino, { Logger, LoggerOptions } from 'pino';
-import { Observable, Subject, of, EMPTY, Subscription } from 'rxjs';
-import { flatMap, tap } from 'rxjs/operators';
+import {
+  EMPTY,
+  Observable,
+  Subject,
+  Subscription,
+  of,
+  combineLatest,
+} from 'rxjs';
+import { tap, flatMap, first } from 'rxjs/operators';
 import { retryBackoff } from 'backoff-rxjs';
 import { dialog } from '@dlghq/dialog-api';
 import Rpc, { Token } from './Rpc';
@@ -27,15 +34,18 @@ import {
   HistoryListMode,
   GroupType,
   PeerType,
-  GroupMember,
+  MessagingUpdate,
+  parseMessagingUpdate,
+  Content,
 } from './entities';
 import State from './State';
+import { dateFromLong, getOpt } from './entities/utils';
 import { ResponseEntities } from './internal/types';
 import getFileInfo from './utils/getFileInfo';
 import createImagePreview from './utils/createImagePreview';
 import normalizeArray from './utils/normalizeArray';
 import { SSLConfig } from './utils/createCredentials';
-import { PeerNotFoundError } from './errors';
+import { PeerNotFoundError, MessageRejectedError } from './errors';
 
 type Config = {
   token: Token;
@@ -224,13 +234,21 @@ class Bot {
    * Subscribes to messages stream.
    */
   public subscribeToMessages(): Observable<Message> {
-    return this.updateSubject.pipe(
+    return this.subscribeToMessageUpdates().pipe(
       flatMap((update) => {
-        if (update.updateMessage) {
-          return of(Message.from(update.updateMessage));
-        }
+        return update.type === 'new' ? of(update.payload) : EMPTY;
+      }),
+    );
+  }
 
-        return EMPTY;
+  /**
+   * Subscribes to messages stream.
+   */
+  public subscribeToMessageUpdates(): Observable<MessagingUpdate> {
+    return this.updateSubject.pipe(
+      flatMap((api) => {
+        const update = parseMessagingUpdate(api);
+        return update ? of(update) : EMPTY;
       }),
     );
   }
@@ -258,25 +276,107 @@ class Bot {
     text: string,
     attachment?: null | MessageAttachment,
     actionOrActions?: ActionGroup | ActionGroup[],
-  ): Promise<UUID> {
-    const state = await this.ready;
-    const outPeer = state.createOutPeer(peer);
+  ): Promise<Message> {
     const content = TextContent.create(text, normalizeArray(actionOrActions));
 
-    return this.rpc.sendMessage(outPeer, content, attachment);
+    return this.sendMessage(peer, content, attachment);
+  }
+
+  private async sendMessage(
+    peer: Peer,
+    content: Content,
+    attachment?: null | MessageAttachment,
+  ): Promise<Message> {
+    const state = await this.ready;
+    const outPeer = state.createOutPeer(peer);
+
+    return combineLatest(
+      this.updateSubject,
+      this.rpc.sendMessage(outPeer, content, attachment),
+    )
+      .pipe(
+        flatMap(
+          ([
+            { updateMessage, updateMessageSent, updateMessageRejectedByHook },
+            dId,
+          ]) => {
+            if (updateMessage && updateMessage.peer && updateMessage.randomId) {
+              const updatePeer = Peer.from(updateMessage.peer);
+              if (
+                dId.equals(updateMessage.randomId) &&
+                peer.equals(updatePeer)
+              ) {
+                return of(Message.from(updateMessage));
+              }
+            }
+
+            if (
+              updateMessageSent &&
+              updateMessageSent.mid &&
+              updateMessageSent.peer
+            ) {
+              const updatePeer = Peer.from(updateMessageSent.peer);
+              if (
+                dId.equals(updateMessageSent.rid) &&
+                peer.equals(updatePeer)
+              ) {
+                return of(
+                  new Message(
+                    UUID.from(updateMessageSent.mid),
+                    peer,
+                    dateFromLong(updateMessageSent.date),
+                    content,
+                    attachment || null,
+                    state.self.id,
+                    dateFromLong(updateMessageSent.date),
+                  ),
+                );
+              }
+            }
+
+            if (
+              updateMessageRejectedByHook &&
+              updateMessageRejectedByHook.peer
+            ) {
+              const updatePeer = Peer.from(updateMessageRejectedByHook.peer);
+              if (
+                dId.equals(updateMessageRejectedByHook.rid) &&
+                peer.equals(updatePeer)
+              ) {
+                throw new MessageRejectedError(
+                  peer,
+                  content,
+                  updateMessageRejectedByHook.hookId,
+                  getOpt(updateMessageRejectedByHook.reason, null),
+                );
+              }
+            }
+
+            return EMPTY;
+          },
+        ),
+        first(),
+      )
+      .toPromise();
   }
 
   /**
    * Edits text message.
+   *
+   * @param id              The message id.
+   * @param editedAt        The message last edit date.
+   * @param text            Updated text.
+   * @param actionOrActions The message actions.
    */
   public async editText(
-    mid: UUID,
+    id: UUID,
+    editedAt: Date,
     text: string,
     actionOrActions?: ActionGroup | ActionGroup[],
   ): Promise<void> {
     const content = TextContent.create(text, normalizeArray(actionOrActions));
 
-    return this.rpc.editMessage(mid, content);
+    return this.rpc.editMessage(id, editedAt, content);
   }
 
   /**
@@ -289,10 +389,13 @@ class Bot {
   }
 
   /**
-   * Edits text message.
+   * Deletes text message.
+   *
+   * @param id       The message id.
+   * @param editedAt The message last edit date.
    */
-  public async deleteMessage(mid: UUID): Promise<void> {
-    return this.rpc.editMessage(mid, DeletedContent.create());
+  public async deleteMessage(id: UUID, editedAt: Date): Promise<void> {
+    return this.rpc.editMessage(id, editedAt, DeletedContent.create());
   }
 
   /**
@@ -302,9 +405,7 @@ class Bot {
     peer: Peer,
     fileName: string,
     attachment?: MessageAttachment,
-  ): Promise<UUID> {
-    const state = await this.ready;
-    const outPeer = state.createOutPeer(peer);
+  ): Promise<Message> {
     const fileInfo = await getFileInfo(fileName);
     const fileLocation = await this.rpc.uploadFile(fileName, fileInfo);
 
@@ -317,7 +418,7 @@ class Bot {
       null,
     );
 
-    return this.rpc.sendMessage(outPeer, content, attachment);
+    return this.sendMessage(peer, content, attachment);
   }
 
   /**
@@ -327,9 +428,7 @@ class Bot {
     peer: Peer,
     fileName: string,
     attachment?: MessageAttachment,
-  ): Promise<UUID> {
-    const state = await this.ready;
-    const outPeer = state.createOutPeer(peer);
+  ): Promise<Message> {
     const fileInfo = await getFileInfo(fileName);
     const { preview, extension } = await createImagePreview(fileName);
     const fileLocation = await this.rpc.uploadFile(fileName, fileInfo);
@@ -343,7 +442,7 @@ class Bot {
       extension,
     );
 
-    return this.rpc.sendMessage(outPeer, content, attachment);
+    return this.sendMessage(peer, content, attachment);
   }
 
   /**

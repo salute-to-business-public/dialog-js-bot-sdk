@@ -11,3 +11,4 @@ export { Message, HistoryMessage, HistoryListMode, MessageAttachment };
 
 export * from './content';
 export * from './interactive';
+export * from './MessagingUpdate';

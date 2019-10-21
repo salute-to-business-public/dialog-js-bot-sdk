@@ -4,7 +4,7 @@
   "description": "Dialog Bot SDK",
   "main": "lib/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --testTimeout 30000",
     "predocs": "rm -rf docs/",
     "docs": "typedoc --excludePrivate --theme minimal --mode file --out docs src/index.ts",
     "postdocs": "buildbranch gh-pages docs",

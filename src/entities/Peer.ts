@@ -46,6 +46,10 @@ class Peer {
     this.strId = strId;
   }
 
+  public equals(peer: Peer): boolean {
+    return this.id === peer.id && this.type === peer.type;
+  }
+
   public getKey() {
     return `${this.type}_${this.id}`;
   }

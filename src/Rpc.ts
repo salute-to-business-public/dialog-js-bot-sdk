@@ -292,28 +292,26 @@ class Rpc extends Services {
     attachment?: null | MessageAttachment,
     isOnlyForUser?: null | number,
   ) {
-    const res = await this.messaging.sendMessage(
+    const dId = await randomLong();
+    await this.messaging.sendMessage(
       dialog.RequestSendMessage.create({
         isOnlyForUser,
         peer: peer.toApi(),
-        deduplicationId: await randomLong(),
+        deduplicationId: dId,
         message: contentToApi(content),
         reply: attachment ? attachment.toReplyApi() : null,
         forward: attachment ? attachment.toForwardApi() : null,
       }),
     );
 
-    if (!res.messageId) {
-      throw new UnexpectedApiError('messageId');
-    }
-
-    return UUID.from(res.messageId);
+    return dId;
   }
 
-  async editMessage(mid: UUID, content: Content) {
+  async editMessage(mid: UUID, clock: Date, content: Content) {
     await this.messaging.updateMessage(
       dialog.RequestUpdateMessage.create({
         mid: mid.toApi(),
+        lastEditedAt: longFromDate(clock),
         updatedMessage: contentToApi(content),
       }),
     );

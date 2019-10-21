@@ -8,6 +8,7 @@ import UUID from '../UUID';
 import { Content, apiToContent } from './content';
 import MessageAttachment from './MessageAttachment';
 import parseDateFromLong from '../../utils/parseDateFromLong';
+import { UnexpectedApiError } from '../../errors';
 
 class Message {
   /**
@@ -40,17 +41,22 @@ class Message {
    */
   public readonly senderUserId: number;
 
+  /**
+   * The message last edit time.
+   */
+  public readonly editedAt: Date;
+
   static from(api: dialog.UpdateMessage) {
     if (!api.mid) {
-      throw new Error("Message unexpectedly doesn't have id");
+      throw new UnexpectedApiError('mid');
     }
 
     if (!api.peer) {
-      throw new Error("Message unexpectedly doesn't have peer");
+      throw new UnexpectedApiError('peer');
     }
 
     if (!api.message) {
-      throw new Error("Message unexpectedly doesn't have content");
+      throw new UnexpectedApiError('message');
     }
 
     return new Message(
@@ -60,6 +66,7 @@ class Message {
       apiToContent(api.message),
       MessageAttachment.from(api.reply, api.forward),
       api.senderUid,
+      parseDateFromLong(api.date),
     );
   }
 
@@ -70,6 +77,7 @@ class Message {
     content: Content,
     attachment: null | MessageAttachment,
     senderUserId: number,
+    editedAt: Date,
   ) {
     this.id = id;
     this.peer = peer;
@@ -77,6 +85,7 @@ class Message {
     this.content = content;
     this.attachment = attachment;
     this.senderUserId = senderUserId;
+    this.editedAt = editedAt;
   }
 }
 
