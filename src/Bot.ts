@@ -46,12 +46,14 @@ import createImagePreview from './utils/createImagePreview';
 import normalizeArray from './utils/normalizeArray';
 import { SSLConfig } from './utils/createCredentials';
 import { PeerNotFoundError, MessageRejectedError } from './errors';
+import RetryOptions from './entities/RetryOptions';
 
 type Config = {
   token: Token;
   endpoints: Array<string>;
   ssl?: SSLConfig;
   loggerOptions?: LoggerOptions;
+  retryOptions?: RetryOptions;
 };
 
 class Bot {
@@ -78,6 +80,7 @@ class Bot {
       endpoint,
       ssl: config.ssl,
       logger: this.logger,
+      retryOptions: config.retryOptions,
     });
 
     this.ready = this.start(config.token);

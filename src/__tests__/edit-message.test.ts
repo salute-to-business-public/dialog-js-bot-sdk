@@ -29,7 +29,15 @@ testWithContext(
         ),
         bufferCount(2),
         first(),
-        tap(([updateNew, updateEdit]) => {
+        tap((messageArray) => {
+          messageArray.sort((msg1, msg2) => {
+            if (msg1.payload.editedAt > msg2.payload.editedAt) {
+              return 1;
+            }
+            return 0;
+          });
+          const updateNew = messageArray[0];
+          const updateEdit = messageArray[1];
           expect(updateNew).toBeTruthy();
           expect(updateNew.type).toBe('new');
           const message = updateNew.payload as Message;
