@@ -14,6 +14,7 @@ import {
   Client,
 } from 'grpc';
 import createLogInterceptor from './interceptors/logger';
+import RetryOptions from '../entities/RetryOptions';
 
 const DEFAULT_DEADLINE = 30 * 1000;
 
@@ -24,6 +25,7 @@ export type Config = {
   endpoint: string;
   credentials: ChannelCredentials;
   generateMetadata: MetadataGenerator;
+  retryOptions?: RetryOptions;
 };
 
 type CallOptionsConfig = {
@@ -35,6 +37,7 @@ abstract class Service<T extends Client> {
   protected readonly service: T;
   private readonly credentials: CallCredentials;
   private readonly noopCredentials: CallCredentials;
+  private readonly retryOptions: RetryOptions | undefined;
 
   protected constructor(ServiceImpl: T, config: Config) {
     this.service = Bluebird.promisifyAll(
@@ -58,6 +61,8 @@ abstract class Service<T extends Client> {
         callback(null, new Metadata());
       },
     );
+
+    this.retryOptions = config.retryOptions;
   }
 
   protected getCallOptions({
