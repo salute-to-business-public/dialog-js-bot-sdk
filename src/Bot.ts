@@ -9,9 +9,10 @@ import {
   Subject,
   Subscription,
   of,
+  defer,
   combineLatest,
 } from 'rxjs';
-import { tap, flatMap, first } from 'rxjs/operators';
+import { tap, map, flatMap, first } from 'rxjs/operators';
 import { retryBackoff } from 'backoff-rxjs';
 import { dialog } from '@dlghq/dialog-api';
 import Rpc, { Token } from './Rpc';
@@ -94,7 +95,17 @@ class Bot {
   }
 
   private async start(token: Token) {
-    const self = User.from(await this.rpc.authorize(token));
+    const self = await defer(() => this.rpc.authorize(token))
+      .pipe(
+        retryBackoff({
+          initialInterval: 5000,
+          maxInterval: 30 * 1000,
+          maxRetries: 10,
+        }),
+        map(User.from),
+      )
+      .toPromise();
+
     const state = new State(self);
     const dialogs = await this.applyEntities(
       state,
