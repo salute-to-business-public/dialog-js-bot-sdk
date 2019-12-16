@@ -15,46 +15,60 @@ npm install @dlghq/dialog-bot-sdk
 
 ```typescript
 import dotenv from 'dotenv';
-import Bot, { MessageAttachment } from '@dlghq/dialog-bot-sdk';
+import Bot from '@dlghq/dialog-bot-sdk';
+import { flatMap } from 'rxjs/operators';
 
 dotenv.config();
+
+async function run(token: string, endpoint: string) {
+  const bot = new Bot({
+    token,
+    endpoints: [endpoint],
+    loggerOptions: {
+      name: 'example-bot',
+      level: 'trace',
+      prettyPrint: true,
+    },
+  });
+
+  const self = await bot.getSelf();
+  bot.logger.info(`I've started, post me something @${self.nick}`);
+
+  bot.updateSubject.subscribe({
+    next(update) {
+      bot.logger.info(JSON.stringify({ update }, null, 2));
+    },
+  });
+
+  const messagesHandle = bot.subscribeToMessages().pipe(
+    flatMap(async (message) => {
+      const author = await bot.forceGetUser(message.senderUserId);
+      if (author.isBot) {
+        await bot.sendText(message.peer, "Hi, I'm bot too!");
+        return;
+      }
+    }),
+  );
+
+  await new Promise((resolve, reject) => {
+    messagesHandle.subscribe({
+      error: reject,
+      complete: resolve,
+    });
+  });
+}
 
 const token = process.env.BOT_TOKEN;
 if (typeof token !== 'string') {
   throw new Error('BOT_TOKEN env variable not configured');
 }
 
-const bot = new Bot({
-  token,
-  endpoints: ['https://epm.dlg.im'],
-});
+const endpoint =
+  process.env.BOT_ENDPOINT || 'https://grpc-test.transmit.im:9443';
 
-bot.updateSubject.subscribe({
-  next(update) {
-    console.log('update', update);
-  },
-});
-
-const messagesHandle = bot.subscribeToMessages().pipe(
-  flatMap(async (message) => {
-    const author = await bot.forceGetUser(message.senderUserId);
-    if (author.isBot) {
-      bot.sendDocument(message.peer, 'Hi, other bot!');
-    }
-  }),
-);
-
-const actionsHandle = bot
-  .subscribeToActions()
-  .pipe(
-    flatMap(async (event) => bot.logger.info(JSON.stringify(event, null, 2))),
-  );
-
-await new Promise((resolve, reject) => {
-  merge(messagesHandle, actionsHandle).subscribe({
-    error: reject,
-    complete: resolve,
-  });
+run(token, endpoint).catch((error) => {
+  console.error(error);
+  process.exit(1);
 });
 ```
 
