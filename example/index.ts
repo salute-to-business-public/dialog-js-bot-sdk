@@ -94,7 +94,9 @@ async function run(token: string, endpoint: string) {
           case 'delete':
             if (message.attachment) {
               await Promise.all(
-                message.attachment.mids.map((mid) => bot.deleteMessage(mid)),
+                message.attachment.mids.map((mid) =>
+                  bot.deleteMessage(mid, message.editedAt),
+                ),
               );
             }
             break;

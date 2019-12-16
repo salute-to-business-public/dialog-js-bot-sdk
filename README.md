@@ -35,30 +35,27 @@ bot.updateSubject.subscribe({
   },
 });
 
-bot
-  .onMessage(async (message) => {
-    if (message.content.type === 'text') {
-      // echo message with reply
-      const mid = await bot.sendText(
-        message.peer,
-        message.content.text,
-        MessageAttachment.reply(message.id),
-      );
-
-      // reply to self sent message with document
-      await bot.sendDocument(
-        message.peer,
-        __filename,
-        MessageAttachment.reply(mid),
-      );
+const messagesHandle = bot.subscribeToMessages().pipe(
+  flatMap(async (message) => {
+    const author = await bot.forceGetUser(message.senderUserId);
+    if (author.isBot) {
+      bot.sendDocument(message.peer, 'Hi, other bot!');
     }
-  })
-  .subscribe({
-    error(error) {
-      console.error(error);
-      process.exit(1);
-    },
+  }),
+);
+
+const actionsHandle = bot
+  .subscribeToActions()
+  .pipe(
+    flatMap(async (event) => bot.logger.info(JSON.stringify(event, null, 2))),
+  );
+
+await new Promise((resolve, reject) => {
+  merge(messagesHandle, actionsHandle).subscribe({
+    error: reject,
+    complete: resolve,
   });
+});
 ```
 
 ## Mutual authentication
