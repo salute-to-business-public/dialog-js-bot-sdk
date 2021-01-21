@@ -10,7 +10,6 @@
     "postdocs": "buildbranch gh-pages docs",
     "prebuild": "rm -rf lib/",
     "build": "tsc",
-    "preversion": "npm test",
     "postversion": "npm run release",
     "prerelease": "npm run build",
     "release": "git push --follow-tags",
