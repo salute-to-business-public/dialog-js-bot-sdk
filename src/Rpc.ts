@@ -479,6 +479,7 @@ class Rpc extends Services {
     const { type: groupType, shortname } = type.toApi();
     const { group, userPeers } = await this.groups.createGroup(
       dialog.RequestCreateGroup.create({
+        rid: await randomLong(),
         title,
         groupType,
         username: shortname
