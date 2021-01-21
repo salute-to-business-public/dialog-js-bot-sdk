@@ -37,10 +37,9 @@ export function dateFromLong(time?: Long): Date {
 }
 
 export function dateFromTimestamp(ts?: google.protobuf.Timestamp | null): Date {
-  if (!ts) {
+  if (!ts || !ts.seconds || !ts.nanos) {
     return new Date(0);
   }
-
   const secondsMs = parseInt(ts.seconds.toString(), 10) * 1000;
   const nanosMs = ts.nanos / 1e6;
 
