@@ -11,6 +11,24 @@ Bot SDK for [Dialog](https://dlg.im) messenger.
 npm install @dlghq/dialog-bot-sdk
 ```
 
+## Example
+
+An example of an implementation can be found on the path — `./example/index.ts`
+
+## Configure
+
+`token`: A token of an existing bot is needed
+
+`endpoint`: A url to grpc is required
+
+## Create Bot
+
+Text the Security Bot in Dialog
+
+```
+/bot new <nickname> <name>
+```
+
 ## Usage
 
 ```typescript
