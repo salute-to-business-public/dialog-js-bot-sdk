@@ -2,9 +2,6 @@
 
 Bot SDK for [Dialog](https://dlg.im) messenger.
 
-[![CircleCI](https://img.shields.io/circleci/project/github/dialogs/js-bot-sdk/master.svg)](https://circleci.com/gh/dialogs/js-bot-sdk/tree/master)
-[![codecov](https://codecov.io/gh/dialogs/js-bot-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/dialogs/js-bot-sdk)
-
 ## Installation
 
 ```
